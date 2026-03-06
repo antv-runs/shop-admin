@@ -1,0 +1,69 @@
+version: "3.8"
+
+services:
+  shop-admin-db:
+    image: mysql:8.0
+    container_name: shop-admin-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ShopAdminDB
+    ports:
+      - "3307:3306"
+    volumes:
+      - shop-admin-db-data:/var/lib/mysql
+    networks:
+      - shop-admin-network
+
+  shop-admin-phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: shop-admin-phpmyadmin
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: shop-admin-db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - shop-admin-db
+    networks:
+      - shop-admin-network
+
+  shop-admin-minio:
+    image: minio/minio:RELEASE.2025-04-08T15-41-24Z
+    container_name: shop-admin-minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - shop-admin-minio-data:/data
+    networks:
+      - shop-admin-network
+
+  shop-admin-minio-init:
+    image: minio/mc
+    depends_on:
+      - shop-admin-minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set minio http://shop-admin-minio:9000 admin admin123;
+      mc mb minio/shop-admin;
+      mc anonymous set public minio/shop-admin;
+      exit 0;
+      "
+    networks:
+      - shop-admin-network
+
+volumes:
+  shop-admin-db-data:
+  shop-admin-minio-data:
+
+networks:
+  shop-admin-network:
