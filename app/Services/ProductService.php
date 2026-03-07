@@ -8,9 +8,16 @@ use App\Models\Category;
 use App\Enums\ItemStatus;
 use App\Jobs\ExportProductsJob;
 use Illuminate\Support\Facades\Storage;
+use App\Contracts\FileUploadServiceInterface;
 
 class ProductService implements ProductServiceInterface
 {
+    private FileUploadServiceInterface $fileUploadService;
+
+    public function __construct(FileUploadServiceInterface $fileUploadService)
+    {
+        $this->fileUploadService = $fileUploadService;
+    }
     /**
      * Get all products with category
      */
@@ -84,11 +91,8 @@ class ProductService implements ProductServiceInterface
     {
         // If a new image is provided, remove old image first
         if (!empty($data['image']) && $product->image) {
-            try {
-                Storage::disk('public')->delete($product->image);
-            } catch (\Throwable $e) {
-                // ignore deletion errors
-            }
+            // remove old image using upload service (which respects configured disk)
+            $this->fileUploadService->deleteFile($product->image);
         }
 
         $product->update($data);
@@ -144,11 +148,8 @@ class ProductService implements ProductServiceInterface
         $product = Product::withTrashed()->findOrFail($id);
         // delete image file if exists
         if ($product->image) {
-            try {
-                Storage::disk('public')->delete($product->image);
-            } catch (\Throwable $e) {
-                // ignore
-            }
+            // reuse service to delete file when forcing delete
+            $this->fileUploadService->deleteFile($product->image);
         }
 
         $product->forceDelete();

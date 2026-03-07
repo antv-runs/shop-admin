@@ -32,3 +32,5 @@ class Product extends Model
         return $this->image
             ? Storage::disk('minio')->url($this->image)
             : null;
+    }
+}

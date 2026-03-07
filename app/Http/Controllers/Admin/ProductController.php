@@ -12,22 +12,9 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    /**
-     * @var ProductServiceInterface
-     */
-    private $productService;
+    private ProductServiceInterface $productService;
+    private FileUploadServiceInterface $fileUploadService;
 
-    /**
-     * @var FileUploadServiceInterface
-     */
-    private $fileUploadService;
-
-    /**
-     * Inject dependencies
-     *
-     * Dependencies: ProductServiceInterface, FileUploadServiceInterface
-     * Follows Dependency Inversion - depends on abstractions not concretions
-     */
     public function __construct(ProductServiceInterface $productService, FileUploadServiceInterface $fileUploadService)
     {
         $this->productService = $productService;

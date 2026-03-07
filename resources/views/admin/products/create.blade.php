@@ -11,7 +11,10 @@
 
             <div>
                 <label class="block font-medium">Image (one):</label>
-                <input type="file" name="image" accept="image/*" class="mt-1 block w-full">
+                <div class="mb-2">
+                    <img id="preview" src="" alt="Product Image" class="h-24 w-auto object-cover hidden">
+                </div>
+                <input type="file" name="image" id="image" accept="image/*" class="mt-1 block w-full">
                 @error('image') <p class="text-red-600">{{ $message }}</p> @enderror
             </div>
 
@@ -51,4 +54,22 @@
             </div>
         </form>
     </div>
+
+    <script>
+        document.getElementById('image').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('preview');
+            if (!file) {
+                preview.classList.add('hidden');
+                preview.src = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        });
+    </script>
 @endsection
