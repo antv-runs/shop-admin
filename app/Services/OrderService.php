@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Contracts\OrderServiceInterface;
 use App\Contracts\Repositories\OrderRepositoryInterface;
+use App\DTOs\CreateOrderDTO;
 
 class OrderService implements OrderServiceInterface
 {
@@ -23,9 +24,9 @@ class OrderService implements OrderServiceInterface
      *
      * Prices are looked up from the products table to prevent trusting FE data.
      */
-    public function createOrder(array $data)
+    public function createOrder(CreateOrderDTO $dto)
     {
-        return $this->orderRepository->create($data);
+        return $this->orderRepository->create($dto->toArray());
     }
 
     /**

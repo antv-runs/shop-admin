@@ -7,6 +7,7 @@ use App\Services\AuthService;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Resources\UserResource;
+use App\DTOs\RegisterUserDTO;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends BaseController
@@ -59,7 +60,8 @@ class AuthController extends BaseController
      */
     public function register(RegisterRequest $request)
     {
-        $result = $this->authService->register($request->only(['name', 'email', 'password']));
+        $dto = RegisterUserDTO::fromArray($request->validated());
+        $result = $this->authService->register($dto);
         return $this->success($result, 'Register successfully', Response::HTTP_CREATED);
     }
 

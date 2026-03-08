@@ -3,6 +3,8 @@
 namespace App\Contracts;
 
 use App\Models\Product;
+use App\DTOs\CreateProductDTO;
+use App\DTOs\UpdateProductDTO;
 
 interface ProductServiceInterface
 {
@@ -19,7 +21,7 @@ interface ProductServiceInterface
     /**
      * Create a new product
      */
-    public function createProduct(array $data);
+    public function createProduct(CreateProductDTO $dto);
 
     /**
      * Get product by ID
@@ -29,7 +31,7 @@ interface ProductServiceInterface
     /**
      * Update product
      */
-    public function updateProduct(Product $product, array $data);
+    public function updateProduct(Product $product, UpdateProductDTO $dto);
 
     /**
      * Delete product (soft delete)

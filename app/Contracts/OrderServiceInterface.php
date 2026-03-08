@@ -2,15 +2,17 @@
 
 namespace App\Contracts;
 
+use App\DTOs\CreateOrderDTO;
+
 interface OrderServiceInterface
 {
     /**
      * Create a new order
      *
-     * @param array $data   // expects ['user_id' => ..., 'items'=>[['product_id'=>..., 'quantity'=>...], ...]]
+     * @param CreateOrderDTO $dto
      * @return \App\Models\Order
      */
-    public function createOrder(array $data);
+    public function createOrder(CreateOrderDTO $dto);
 
     /**
      * Get paginated orders belonging to a user

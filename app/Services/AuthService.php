@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Contracts\AuthServiceInterface;
 use App\Http\Resources\UserResource;
 use App\Exceptions\BusinessException;
+use App\DTOs\RegisterUserDTO;
 
 class AuthService implements AuthServiceInterface
 {
@@ -20,14 +21,14 @@ class AuthService implements AuthServiceInterface
         $this->userRepository = $userRepository;
     }
 
-    public function register(array $data): array
+    public function register(RegisterUserDTO $dto): array
     {
-        Log::info('AuthService: register called', ['email' => $data['email'] ?? null]);
+        Log::info('AuthService: register called', ['email' => $dto->email]);
 
         $userData = [
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'name' => $dto->name,
+            'email' => $dto->email,
+            'password' => Hash::make($dto->password),
         ];
 
         $user = $this->userRepository->create($userData);

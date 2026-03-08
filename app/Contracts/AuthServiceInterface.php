@@ -3,10 +3,11 @@
 namespace App\Contracts;
 
 use Illuminate\Http\Request;
+use App\DTOs\RegisterUserDTO;
 
 interface AuthServiceInterface
 {
-    public function register(array $data): array;
+    public function register(RegisterUserDTO $dto): array;
 
     public function login(array $credentials): array;
 

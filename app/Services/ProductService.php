@@ -8,6 +8,8 @@ use App\Contracts\Repositories\CategoryRepositoryInterface;
 use App\Models\Product;
 use App\Jobs\ExportProductsJob;
 use App\Contracts\FileUploadServiceInterface;
+use App\DTOs\CreateProductDTO;
+use App\DTOs\UpdateProductDTO;
 
 class ProductService implements ProductServiceInterface
 {
@@ -44,9 +46,9 @@ class ProductService implements ProductServiceInterface
     /**
      * Create a new product
      */
-    public function createProduct(array $data)
+    public function createProduct(CreateProductDTO $dto)
     {
-        return $this->productRepository->create($data);
+        return $this->productRepository->create($dto->toArray());
     }
 
     /**
@@ -60,8 +62,10 @@ class ProductService implements ProductServiceInterface
     /**
      * Update product
      */
-    public function updateProduct(Product $product, array $data)
+    public function updateProduct(Product $product, UpdateProductDTO $dto)
     {
+        $data = $dto->toArray();
+
         // If a new image is provided, remove old image first
         if (!empty($data['image']) && $product->image) {
             // remove old image using upload service (which respects configured disk)

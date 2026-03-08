@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Contracts\ProfileServiceInterface;
 use App\Contracts\FileUploadServiceInterface;
 use App\DTOs\UpdateUserProfileDTO;
+use App\Models\User;
 
 class ProfileService implements ProfileServiceInterface
 {
@@ -17,7 +18,7 @@ class ProfileService implements ProfileServiceInterface
      *
      * @return \App\Models\User
      */
-    public function updateProfile($user, UpdateUserProfileDTO $dto)
+    public function updateProfile(User $user, UpdateUserProfileDTO $dto)
     {
         $data = $dto->toArray();
 
@@ -43,7 +44,7 @@ class ProfileService implements ProfileServiceInterface
     /**
      * Delete user's profile image and return updated user.
      */
-    public function deleteProfileImage($user)
+    public function deleteProfileImage(User $user)
     {
         if ($user->profile_image) {
             $this->fileUploadService->deleteFile($user->profile_image);

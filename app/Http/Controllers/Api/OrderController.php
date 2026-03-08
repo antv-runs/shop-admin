@@ -6,6 +6,7 @@ use App\Http\Requests\OrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Services\OrderService;
 use App\Jobs\SendOrderCreatedEmail;
+use App\DTOs\CreateOrderDTO;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -119,7 +120,8 @@ class OrderController extends BaseController
         $data = $request->validated();
         $data['user_id'] = auth()->id();
 
-        $order = $this->orderService->createOrder($data);
+        $dto = CreateOrderDTO::fromArray($data);
+        $order = $this->orderService->createOrder($dto);
 
         // dispatch a queued job to send confirmation email after the transaction commits
         SendOrderCreatedEmail::dispatch($order)->afterCommit();
