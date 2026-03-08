@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\User;
+use App\Contracts\Repositories\UserRepositoryInterface;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -13,16 +13,24 @@ use App\Exceptions\BusinessException;
 
 class AuthService implements AuthServiceInterface
 {
+    private UserRepositoryInterface $userRepository;
+
+    public function __construct(UserRepositoryInterface $userRepository)
+    {
+        $this->userRepository = $userRepository;
+    }
+
     public function register(array $data): array
     {
         Log::info('AuthService: register called', ['email' => $data['email'] ?? null]);
 
-        $user = User::create([
+        $userData = [
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-        ]);
+        ];
 
+        $user = $this->userRepository->create($userData);
         $token = $user->createToken('api-token')->plainTextToken;
 
         Log::info('AuthService: register successful', ['user_id' => $user->id]);

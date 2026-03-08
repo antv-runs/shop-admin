@@ -3,48 +3,27 @@
 namespace App\Services;
 
 use App\Contracts\CategoryServiceInterface;
+use App\Contracts\Repositories\CategoryRepositoryInterface;
 use App\DTOs\CreateCategoryDTO;
 use App\DTOs\UpdateCategoryDTO;
 use App\Models\Category;
-use App\Enums\ItemStatus;
 use Illuminate\Support\Str;
 
 class CategoryService implements CategoryServiceInterface
 {
+    private CategoryRepositoryInterface $categoryRepository;
+
+    public function __construct(CategoryRepositoryInterface $categoryRepository)
+    {
+        $this->categoryRepository = $categoryRepository;
+    }
+
     /**
      * Get all categories
      */
     public function getAllCategories(\Illuminate\Http\Request $request, $perPage = 15)
     {
-        $perPage = (int)$request->input('per_page', $perPage);
-
-        $status = $request->input('status', ItemStatus::ACTIVE->value);
-
-        if ($status === ItemStatus::DELETED->value) {
-            $query = Category::onlyTrashed();
-        } elseif ($status === ItemStatus::ALL->value) {
-            $query = Category::withTrashed();
-        } else {
-            $query = Category::query();
-        }
-
-        // Search by name
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where('name', 'like', "%{$search}%");
-        }
-
-        // Sort
-        $sortBy = $request->input('sort_by', 'id');
-        $sortOrder = $request->input('sort_order', 'desc');
-
-        if (in_array($sortBy, ['id', 'name', 'created_at'])) {
-            $query->orderBy($sortBy, $sortOrder);
-        } else {
-            $query->latest();
-        }
-
-        return $query->paginate($perPage);
+        return $this->categoryRepository->getAll($request, $perPage);
     }
 
     /**
@@ -52,7 +31,7 @@ class CategoryService implements CategoryServiceInterface
      */
     public function getCategory($id)
     {
-        return Category::findOrFail($id);
+        return $this->categoryRepository->findById($id);
     }
 
     /**
@@ -64,17 +43,8 @@ class CategoryService implements CategoryServiceInterface
         $original = $slug;
         $i = 1;
 
-        $query = Category::where('slug', $slug);
-        if ($excludeId) {
-            $query->where('id', '!=', $excludeId);
-        }
-
-        while ($query->exists()) {
+        while ($this->categoryRepository->slugExists($slug, $excludeId)) {
             $slug = $original . '-' . $i++;
-            $query = Category::where('slug', $slug);
-            if ($excludeId) {
-                $query->where('id', '!=', $excludeId);
-            }
         }
 
         return $slug;
@@ -87,7 +57,7 @@ class CategoryService implements CategoryServiceInterface
     {
         $data = $dto->toArray();
         $data['slug'] = $this->generateUniqueSlug($data['name']);
-        return Category::create($data);
+        return $this->categoryRepository->create($data);
     }
 
     /**
@@ -97,8 +67,7 @@ class CategoryService implements CategoryServiceInterface
     {
         $data = $dto->toArray();
         $data['slug'] = $this->generateUniqueSlug($data['name'], $category->id);
-        $category->update($data);
-        return $category;
+        return $this->categoryRepository->update($category, $data);
     }
 
     /**
@@ -106,9 +75,7 @@ class CategoryService implements CategoryServiceInterface
      */
     public function deleteCategory($id)
     {
-        $category = $this->getCategory($id);
-        $category->delete();
-        return true;
+        return $this->categoryRepository->delete($id);
     }
 
     /**
@@ -116,7 +83,7 @@ class CategoryService implements CategoryServiceInterface
      */
     public function getTrashed($perPage = 15)
     {
-        return Category::onlyTrashed()->latest('deleted_at')->paginate($perPage);
+        return $this->categoryRepository->getTrashed($perPage);
     }
 
     /**
@@ -124,14 +91,7 @@ class CategoryService implements CategoryServiceInterface
      */
     public function restoreCategory($id)
     {
-        $category = Category::withTrashed()->findOrFail($id);
-
-        if (!$category->trashed()) {
-            throw new \Exception('Category is not deleted');
-        }
-
-        $category->restore();
-        return $category;
+        return $this->categoryRepository->restore($id);
     }
 
     /**
@@ -139,7 +99,6 @@ class CategoryService implements CategoryServiceInterface
      */
     public function forceDeleteCategory($id)
     {
-        $category = Category::withTrashed()->findOrFail($id);
-        $category->forceDelete();
+        return $this->categoryRepository->forceDelete($id);
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Contracts;
 
 use Illuminate\Http\Request;
+use App\DTOs\CreateUserDTO;
+use App\DTOs\UpdateUserDTO;
 
 interface UserServiceInterface
 {
@@ -24,7 +26,7 @@ interface UserServiceInterface
     /**
      * Create a new user
      */
-    public function createUser(array $data);
+    public function createUser(CreateUserDTO $dto);
 
     /**
      * Retrieve a single user by id (or fail).
@@ -34,7 +36,7 @@ interface UserServiceInterface
     /**
      * Update user by id
      */
-    public function updateUser($id, array $data);
+    public function updateUser($id, UpdateUserDTO $dto);
 
     /**
      * Delete user (soft delete) by id

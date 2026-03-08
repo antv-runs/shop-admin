@@ -3,61 +3,34 @@
 namespace App\Services;
 
 use App\Contracts\ProductServiceInterface;
+use App\Contracts\Repositories\ProductRepositoryInterface;
+use App\Contracts\Repositories\CategoryRepositoryInterface;
 use App\Models\Product;
-use App\Models\Category;
-use App\Enums\ItemStatus;
 use App\Jobs\ExportProductsJob;
-use Illuminate\Support\Facades\Storage;
 use App\Contracts\FileUploadServiceInterface;
 
 class ProductService implements ProductServiceInterface
 {
     private FileUploadServiceInterface $fileUploadService;
+    private ProductRepositoryInterface $productRepository;
+    private CategoryRepositoryInterface $categoryRepository;
 
-    public function __construct(FileUploadServiceInterface $fileUploadService)
-    {
+    public function __construct(
+        FileUploadServiceInterface $fileUploadService,
+        ProductRepositoryInterface $productRepository,
+        CategoryRepositoryInterface $categoryRepository
+    ) {
         $this->fileUploadService = $fileUploadService;
+        $this->productRepository = $productRepository;
+        $this->categoryRepository = $categoryRepository;
     }
+
     /**
      * Get all products with category
      */
     public function getAllProducts(\Illuminate\Http\Request $request, $perPage = 10)
     {
-        $perPage = (int)$request->input('per_page', $perPage);
-
-        // Query builder base on status
-        $status = $request->input('status', ItemStatus::ACTIVE->value);
-
-        if ($status === ItemStatus::DELETED->value) {
-            $query = Product::onlyTrashed()->with('category');
-        } elseif ($status === ItemStatus::ALL->value) {
-            $query = Product::withTrashed()->with('category');
-        } else {
-            $query = Product::with('category');
-        }
-
-        // Search by name
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where('name', 'like', "%{$search}%");
-        }
-
-        // Filter by category
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->input('category_id'));
-        }
-
-        // Sort
-        $sortBy = $request->input('sort_by', 'id');
-        $sortOrder = $request->input('sort_order', 'desc');
-
-        if (in_array($sortBy, ['id', 'name', 'price', 'created_at'])) {
-            $query->orderBy($sortBy, $sortOrder);
-        } else {
-            $query->latest();
-        }
-
-        return $query->paginate($perPage);
+        return $this->productRepository->getAll($request, $perPage);
     }
 
     /**
@@ -65,7 +38,7 @@ class ProductService implements ProductServiceInterface
      */
     public function getCategories()
     {
-        return Category::all();
+        return $this->categoryRepository->getAllActive();
     }
 
     /**
@@ -73,7 +46,7 @@ class ProductService implements ProductServiceInterface
      */
     public function createProduct(array $data)
     {
-        return Product::create($data);
+        return $this->productRepository->create($data);
     }
 
     /**
@@ -81,7 +54,7 @@ class ProductService implements ProductServiceInterface
      */
     public function getProduct($id)
     {
-        return Product::findOrFail($id);
+        return $this->productRepository->findById($id);
     }
 
     /**
@@ -95,8 +68,7 @@ class ProductService implements ProductServiceInterface
             $this->fileUploadService->deleteFile($product->image);
         }
 
-        $product->update($data);
-        return $product;
+        return $this->productRepository->update($product, $data);
     }
 
     /**
@@ -104,9 +76,7 @@ class ProductService implements ProductServiceInterface
      */
     public function deleteProduct($id)
     {
-        $product = Product::findOrFail($id);
-        $product->delete();
-        return true;
+        return $this->productRepository->delete($id);
     }
 
     /**
@@ -114,7 +84,7 @@ class ProductService implements ProductServiceInterface
      */
     public function getTrashed($perPage = 10)
     {
-        return Product::onlyTrashed()->with('category')->latest('deleted_at')->paginate($perPage);
+        return $this->productRepository->getTrashed($perPage);
     }
 
     /**
@@ -122,22 +92,7 @@ class ProductService implements ProductServiceInterface
      */
     public function restoreProduct($id)
     {
-        $product = Product::withTrashed()->findOrFail($id);
-
-        if (!$product->trashed()) {
-            return [
-                'success' => false,
-                'message' => 'Product is not deleted.'
-            ];
-        }
-
-        $product->restore();
-
-        return [
-            'success' => true,
-            'message' => 'Product restored successfully',
-            'data' => $product
-        ];
+        return $this->productRepository->restore($id);
     }
 
     /**
@@ -152,7 +107,7 @@ class ProductService implements ProductServiceInterface
             $this->fileUploadService->deleteFile($product->image);
         }
 
-        $product->forceDelete();
+        $this->productRepository->forceDelete($id);
     }
 
     /**

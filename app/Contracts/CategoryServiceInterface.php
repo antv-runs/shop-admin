@@ -3,6 +3,8 @@
 namespace App\Contracts;
 
 use App\Models\Category;
+use App\DTOs\CreateCategoryDTO;
+use App\DTOs\UpdateCategoryDTO;
 
 interface CategoryServiceInterface
 {
@@ -19,12 +21,12 @@ interface CategoryServiceInterface
     /**
      * Create a new category
      */
-    public function createCategory(array $data);
+    public function createCategory(CreateCategoryDTO $dto);
 
     /**
      * Update category
      */
-    public function updateCategory(Category $category, array $data);
+    public function updateCategory(Category $category, UpdateCategoryDTO $dto);
 
     /**
      * Delete category (soft delete)
