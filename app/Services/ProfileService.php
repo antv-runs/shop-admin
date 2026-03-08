@@ -3,28 +3,36 @@
 namespace App\Services;
 
 use App\Contracts\ProfileServiceInterface;
-use Illuminate\Support\Facades\Storage;
+use App\Contracts\FileUploadServiceInterface;
+use App\DTOs\UpdateUserProfileDTO;
 
 class ProfileService implements ProfileServiceInterface
 {
+    public function __construct(
+        private FileUploadServiceInterface $fileUploadService
+    ) {}
+
     /**
      * Update user profile information, managing image if present.
      *
      * @return \App\Models\User
      */
-    public function updateProfile($user, array $data)
+    public function updateProfile($user, UpdateUserProfileDTO $dto)
     {
+        $data = $dto->toArray();
+
         // Handle image upload
-        if (isset($data['profile_image'])) {
+        if (isset($data['profile_image']) && $data['profile_image']) {
             // Delete old image if exists
-            $disk = config('filesystems.default');
-            if ($user->profile_image && Storage::disk($disk)->exists($user->profile_image)) {
-                Storage::disk($disk)->delete($user->profile_image);
+            if ($user->profile_image) {
+                $this->fileUploadService->deleteFile($user->profile_image);
             }
 
-            // Store new image
-            $path = $data['profile_image']->store('profile-images', $disk);
-            $data['profile_image'] = $path;
+            // Upload new profile image
+            $data['profile_image'] = $this->fileUploadService->uploadProfileImage($data['profile_image']);
+        } else {
+            // Remove the key if not set
+            unset($data['profile_image']);
         }
 
         $user->update($data);
@@ -37,9 +45,8 @@ class ProfileService implements ProfileServiceInterface
      */
     public function deleteProfileImage($user)
     {
-        $disk = config('filesystems.default');
-        if ($user->profile_image && Storage::disk($disk)->exists($user->profile_image)) {
-            Storage::disk($disk)->delete($user->profile_image);
+        if ($user->profile_image) {
+            $this->fileUploadService->deleteFile($user->profile_image);
         }
 
         $user->update(['profile_image' => null]);

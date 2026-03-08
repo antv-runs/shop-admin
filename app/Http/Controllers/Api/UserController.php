@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\UserRequest;
 use App\Contracts\UserServiceInterface;
 use App\Http\Resources\UserResource;
+use App\DTOs\CreateUserDTO;
+use App\DTOs\UpdateUserDTO;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -81,8 +83,12 @@ class UserController extends BaseController
      */
     public function store(UserRequest $request)
     {
-        $data = $request->validated();
-        $user = $this->userService->createUser($data);
+        $validated = $request->validated();
+        
+        // Create DTO from validated data
+        $dto = CreateUserDTO::fromArray($validated);
+        
+        $user = $this->userService->createUser($dto);
 
         return $this->success(new UserResource($user), 'User created successfully', Response::HTTP_CREATED);
     }
@@ -151,8 +157,12 @@ class UserController extends BaseController
      */
     public function update(UserRequest $request, $id)
     {
-        $data = $request->validated();
-        $user = $this->userService->updateUser($id, $data);
+        $validated = $request->validated();
+        
+        // Create DTO from validated data
+        $dto = UpdateUserDTO::fromArray($validated);
+        
+        $user = $this->userService->updateUser($id, $dto);
         return $this->success(new UserResource($user), 'User updated successfully');
     }
 

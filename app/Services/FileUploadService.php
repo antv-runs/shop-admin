@@ -5,11 +5,12 @@ namespace App\Services;
 use App\Contracts\FileUploadServiceInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Handle file upload operations
  *
- * Single Responsibility: only handles file uploads
+ * Single Responsibility: only handles file uploads and storage access
  * Open/Closed: easily extended for different upload types
  * Dependency Inversion: implements FileUploadServiceInterface
  */
@@ -22,6 +23,15 @@ class FileUploadService implements FileUploadServiceInterface
     {
         $disk = config('filesystems.default');
         return $file->store('products', $disk);
+    }
+
+    /**
+     * Upload a profile image and return the path
+     */
+    public function uploadProfileImage(UploadedFile $file): string
+    {
+        $disk = config('filesystems.default');
+        return $file->store('profile-images', $disk);
     }
 
     /**
@@ -48,5 +58,61 @@ class FileUploadService implements FileUploadServiceInterface
             $this->deleteFile($oldPath);
         }
         return $this->uploadProductImage($newFile);
+    }
+
+    /**
+     * Check if a file exists in storage
+     */
+    public function fileExists(string $path): bool
+    {
+        $disk = config('filesystems.default');
+        return Storage::disk($disk)->exists($path);
+    }
+
+    /**
+     * Write content to a file in storage
+     */
+    public function putContent(string $path, string $content): string
+    {
+        $disk = config('filesystems.default');
+        Storage::disk($disk)->put($path, $content);
+        return $path;
+    }
+
+    /**
+     * Create a directory in storage
+     */
+    public function makeDirectory(string $path): void
+    {
+        $disk = config('filesystems.default');
+        if (!Storage::disk($disk)->exists($path)) {
+            Storage::disk($disk)->makeDirectory($path);
+        }
+    }
+
+    /**
+     * Get URL for a file in storage
+     */
+    public function getUrl(string $path, string $disk = 'minio'): string
+    {
+        return Storage::disk($disk)->url($path);
+    }
+
+    /**
+     * Get last modified timestamp of a file
+     */
+    public function getLastModified(string $path): int
+    {
+        $disk = config('filesystems.default');
+        return Storage::disk($disk)->lastModified($path);
+    }
+
+    /**
+     * Download a file from storage
+     */
+    public function download(string $path, string $filename, array $headers = []): StreamedResponse
+    {
+        $disk = config('filesystems.default');
+        return Storage::disk($disk)->download($path, $filename, $headers);
     }
 }

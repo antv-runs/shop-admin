@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Services\ProfileApiService;
 use App\Http\Requests\ProfileApiRequest;
 use App\Http\Resources\UserResource;
+use App\DTOs\UpdateUserProfileDTO;
 use Symfony\Component\HttpFoundation\Response;
 
 class ProfileController extends BaseController
@@ -31,7 +32,10 @@ class ProfileController extends BaseController
             $validated['profile_image'] = $request->file('profile_image');
         }
 
-        $user = $this->profileService->updateProfile($user, $validated);
+        // Create DTO from validated data
+        $dto = UpdateUserProfileDTO::fromArray($validated);
+
+        $user = $this->profileService->updateProfile($user, $dto);
 
         return $this->success(new UserResource($user), 'Profile updated successfully');
     }

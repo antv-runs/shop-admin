@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Contracts\CategoryServiceInterface;
+use App\DTOs\CreateCategoryDTO;
+use App\DTOs\UpdateCategoryDTO;
 use App\Models\Category;
 use App\Enums\ItemStatus;
 use Illuminate\Support\Str;
@@ -81,8 +83,9 @@ class CategoryService implements CategoryServiceInterface
     /**
      * Create a new category
      */
-    public function createCategory(array $data)
+    public function createCategory(CreateCategoryDTO $dto)
     {
+        $data = $dto->toArray();
         $data['slug'] = $this->generateUniqueSlug($data['name']);
         return Category::create($data);
     }
@@ -90,8 +93,9 @@ class CategoryService implements CategoryServiceInterface
     /**
      * Update category
      */
-    public function updateCategory(Category $category, array $data)
+    public function updateCategory(Category $category, UpdateCategoryDTO $dto)
     {
+        $data = $dto->toArray();
         $data['slug'] = $this->generateUniqueSlug($data['name'], $category->id);
         $category->update($data);
         return $category;

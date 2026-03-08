@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UserRequest;
 use App\Models\User;
 use App\Contracts\UserServiceInterface;
+use App\DTOs\CreateUserDTO;
+use App\DTOs\UpdateUserDTO;
 use App\Exceptions\BusinessException;
 use Illuminate\Http\Request;
 
@@ -52,9 +54,12 @@ class UserController extends Controller
 
     public function store(UserRequest $request)
     {
-        $data = $request->validated();
+        $validated = $request->validated();
 
-        $this->userService->createUser($data);
+        // Create DTO from validated data
+        $dto = CreateUserDTO::fromArray($validated);
+
+        $this->userService->createUser($dto);
 
         if ($request->wantsJson()) {
             return response()->json(['message' => 'User created successfully'], 201);
@@ -73,8 +78,12 @@ class UserController extends Controller
     public function update(UserRequest $request, $id)
     {
         try {
-            $data = $request->validated();
-            $user = $this->userService->updateUser($id, $data);
+            $validated = $request->validated();
+            
+            // Create DTO from validated data
+            $dto = UpdateUserDTO::fromArray($validated);
+            
+            $user = $this->userService->updateUser($id, $dto);
 
             if ($request->wantsJson()) {
                 return response()->json(['message' => 'User updated successfully', 'data' => $user]);

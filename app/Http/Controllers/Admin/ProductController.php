@@ -7,6 +7,8 @@ use App\Http\Requests\ProductRequest;
 use App\Models\Product;
 use App\Contracts\ProductServiceInterface;
 use App\Contracts\FileUploadServiceInterface;
+use App\DTOs\CreateProductDTO;
+use App\DTOs\UpdateProductDTO;
 use App\Exceptions\BusinessException;
 use Illuminate\Http\Request;
 
@@ -38,15 +40,18 @@ class ProductController extends Controller
 
     public function store(ProductRequest $request)
     {
-        $data = $request->validated();
+        $validated = $request->validated();
 
         // Handle image upload - delegated to FileUploadService
         // Single Responsibility: controller doesn't handle file operations
         if ($request->hasFile('image')) {
-            $data['image'] = $this->fileUploadService->uploadProductImage($request->file('image'));
+            $validated['image'] = $this->fileUploadService->uploadProductImage($request->file('image'));
         }
 
-        $this->productService->createProduct($data);
+        // Create DTO from validated data
+        $dto = CreateProductDTO::fromArray($validated);
+
+        $this->productService->createProduct($dto);
 
         return redirect()->route('admin.products.index')
              ->with('success', 'Product created successfully');
@@ -62,15 +67,18 @@ class ProductController extends Controller
     public function update(ProductRequest $request, $id)
     {
         $product = $this->productService->getProduct($id);
-        $data = $request->validated();
+        $validated = $request->validated();
 
         // Handle image upload - delegated to FileUploadService
         // Single Responsibility: controller doesn't handle file operations
         if ($request->hasFile('image')) {
-            $data['image'] = $this->fileUploadService->replaceFile($product->image, $request->file('image'));
+            $validated['image'] = $this->fileUploadService->replaceFile($product->image, $request->file('image'));
         }
 
-        $this->productService->updateProduct($product, $data);
+        // Create DTO from validated data
+        $dto = UpdateProductDTO::fromArray($validated);
+
+        $this->productService->updateProduct($product, $dto);
 
         return redirect()->route('admin.products.index')
              ->with('success', 'Product updated successfully');

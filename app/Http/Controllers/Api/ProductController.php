@@ -6,18 +6,19 @@ use App\Http\Requests\ProductApiRequest;
 use App\Http\Requests\ExportProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Services\ProductApiService;
-use App\Services\FileUploadService;
+use App\Contracts\FileUploadServiceInterface;
+use App\DTOs\CreateProductDTO;
+use App\DTOs\UpdateProductDTO;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Log;
 
 class ProductController extends BaseController
 {
     private ProductApiService $productService;
-    private FileUploadService $fileUploadService;
+    private FileUploadServiceInterface $fileUploadService;
 
-    public function __construct(ProductApiService $productService, FileUploadService $fileUploadService)
+    public function __construct(ProductApiService $productService, FileUploadServiceInterface $fileUploadService)
     {
         $this->productService = $productService;
         $this->fileUploadService = $fileUploadService;
@@ -94,14 +95,17 @@ class ProductController extends BaseController
      */
     public function store(ProductApiRequest $request)
     {
-        $data = $request->validated();
+        $validated = $request->validated();
 
         // Handle image upload - delegated to FileUploadService
         if ($request->hasFile('image')) {
-            $data['image'] = $this->fileUploadService->uploadProductImage($request->file('image'));
+            $validated['image'] = $this->fileUploadService->uploadProductImage($request->file('image'));
         }
 
-        $product = $this->productService->createProduct($data);
+        // Create DTO from validated data
+        $dto = CreateProductDTO::fromArray($validated);
+        
+        $product = $this->productService->createProduct($dto);
 
         return $this->success(
             new ProductResource($product['data']),
@@ -181,14 +185,17 @@ class ProductController extends BaseController
     public function update(ProductApiRequest $request, $id)
     {
         $product = $this->productService->getProduct($id);
-        $data = $request->validated();
+        $validated = $request->validated();
 
         // Handle image upload - delegated to FileUploadService
         if ($request->hasFile('image')) {
-            $data['image'] = $this->fileUploadService->replaceFile($product->image, $request->file('image'));
+            $validated['image'] = $this->fileUploadService->replaceFile($product->image, $request->file('image'));
         }
 
-        $result = $this->productService->updateProduct($product, $data);
+        // Create DTO from validated data
+        $dto = UpdateProductDTO::fromArray($validated);
+
+        $result = $this->productService->updateProduct($product, $dto);
 
         return $this->success(
             new ProductResource($result['data'] ?? $product),
@@ -455,7 +462,7 @@ class ProductController extends BaseController
         ]);
 
         // Check if file exists
-        if (!Storage::disk($disk)->exists($filePath)) {
+        if (!$this->fileUploadService->fileExists($filePath)) {
             Log::warning("Export file not found", [
                 'filename' => $filename,
                 'filePath' => $filePath,
@@ -465,7 +472,7 @@ class ProductController extends BaseController
         }
 
         // Get file last modified time for caching
-        $lastModified = Storage::disk($disk)->lastModified($filePath);
+        $lastModified = $this->fileUploadService->getLastModified($filePath);
 
         // Determine content type based on extension
         $extension = pathinfo($filename, PATHINFO_EXTENSION);
@@ -474,7 +481,7 @@ class ProductController extends BaseController
             : 'text/csv';
 
         // return a download stream with proper headers
-        return Storage::disk($disk)->download(
+        return $this->fileUploadService->download(
             $filePath,
             $filename,
             [

@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Contracts\FileUploadServiceInterface;
 use App\Mail\ProductExportFailedMail;
 use App\Mail\ProductExportNoDataMail;
 use App\Mail\ProductExportReadyMail;
@@ -12,7 +13,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
@@ -38,7 +38,7 @@ class ExportProductsJob implements ShouldQueue
      *
      * @return void
      */
-    public function handle()
+    public function handle(FileUploadServiceInterface $fileUploadService)
     {
         try {
             // Build the query with filters
@@ -75,7 +75,7 @@ class ExportProductsJob implements ShouldQueue
 
             // Generate file
             $filename = $this->generateFileName();
-            $filePath = $this->exportToFile($products, $filename);
+            $filePath = $this->exportToFile($products, $filename, $fileUploadService);
 
             // Generate download URL
             $downloadUrl = config('app.url') . '/api/products/exports/' . $filename;
@@ -136,23 +136,21 @@ class ExportProductsJob implements ShouldQueue
      *
      * @param mixed $products
      * @param string $filename
+     * @param FileUploadServiceInterface $fileUploadService
      * @return string File path in storage
      */
-    protected function exportToFile($products, string $filename): string
+    protected function exportToFile($products, string $filename, FileUploadServiceInterface $fileUploadService): string
     {
-        $disk = config('filesystems.default');
         $filePath = "exports/{$filename}";
 
         // Ensure directory exists
-        if (!Storage::disk($disk)->exists('exports')) {
-            Storage::disk($disk)->makeDirectory('exports');
-        }
+        $fileUploadService->makeDirectory('exports');
 
         if ($this->format === 'excel') {
             return $this->exportToExcel($products, $filePath);
         }
 
-        return $this->exportToCsv($products, $filePath);
+        return $this->exportToCsv($products, $filePath, $fileUploadService);
     }
 
     /**
@@ -160,9 +158,10 @@ class ExportProductsJob implements ShouldQueue
      *
      * @param mixed $products
      * @param string $filePath
+     * @param FileUploadServiceInterface $fileUploadService
      * @return string
      */
-    protected function exportToCsv($products, string $filePath): string
+    protected function exportToCsv($products, string $filePath, FileUploadServiceInterface $fileUploadService): string
     {
         $file = fopen('php://temp', 'r+');
 
@@ -179,7 +178,7 @@ class ExportProductsJob implements ShouldQueue
                 $product->price,
                 $product->category?->name ?? 'N/A',
                 $product->description,
-                $product->image ? Storage::disk('minio')->url($product->image) : 'N/A',
+                $product->image ? $fileUploadService->getUrl($product->image, 'minio') : 'N/A',
                 $product->created_at->format('Y-m-d H:i:s'),
             ]);
         }
@@ -191,9 +190,8 @@ class ExportProductsJob implements ShouldQueue
         $content = stream_get_contents($file);
         fclose($file);
 
-        // Store using configured default disk (may be minio)
-        $disk = config('filesystems.default');
-        Storage::disk($disk)->put($filePath, $content);
+        // Store content using file upload service
+        $fileUploadService->putContent($filePath, $content);
 
         return $filePath;
     }

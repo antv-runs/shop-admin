@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
 use App\Contracts\CategoryServiceInterface;
+use App\DTOs\CreateCategoryDTO;
+use App\DTOs\UpdateCategoryDTO;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
@@ -37,8 +39,12 @@ class CategoryController extends Controller
 
     public function store(CategoryRequest $request)
     {
-        $data = $request->only(['name', 'description']);
-        $this->categoryService->createCategory($data);
+        $validated = $request->validated();
+        
+        // Create DTO from validated data
+        $dto = CreateCategoryDTO::fromArray($validated);
+        
+        $this->categoryService->createCategory($dto);
 
         return redirect()->route('admin.categories.index')->with('success', 'Category created successfully');
     }
@@ -52,8 +58,12 @@ class CategoryController extends Controller
     public function update(CategoryRequest $request, $id)
     {
         $category = $this->categoryService->getCategory($id);
-        $data = $request->only(['name', 'description']);
-        $this->categoryService->updateCategory($category, $data);
+        $validated = $request->validated();
+        
+        // Create DTO from validated data
+        $dto = UpdateCategoryDTO::fromArray($validated);
+        
+        $this->categoryService->updateCategory($category, $dto);
 
         return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully');
     }

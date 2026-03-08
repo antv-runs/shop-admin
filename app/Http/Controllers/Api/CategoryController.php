@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\CategoryApiRequest;
 use App\Http\Resources\CategoryResource;
 use App\Services\CategoryService;
+use App\DTOs\CreateCategoryDTO;
+use App\DTOs\UpdateCategoryDTO;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -81,8 +83,12 @@ class CategoryController extends BaseController
      */
     public function store(CategoryApiRequest $request)
     {
-        $data = $request->only(['name', 'description']);
-        $category = $this->categoryService->createCategory($data);
+        $validated = $request->validated();
+        
+        // Create DTO from validated data
+        $dto = CreateCategoryDTO::fromArray($validated);
+        
+        $category = $this->categoryService->createCategory($dto);
 
         return $this->success(
             new CategoryResource($category),
@@ -156,8 +162,12 @@ class CategoryController extends BaseController
     public function update(CategoryApiRequest $request, $id)
     {
         $category = $this->categoryService->getCategory($id);
-        $data = $request->only(['name', 'description']);
-        $result = $this->categoryService->updateCategory($category, $data);
+        $validated = $request->validated();
+        
+        // Create DTO from validated data
+        $dto = UpdateCategoryDTO::fromArray($validated);
+        
+        $result = $this->categoryService->updateCategory($category, $dto);
 
         return $this->success(
             new CategoryResource($result),

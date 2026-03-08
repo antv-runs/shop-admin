@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Contracts\UserServiceInterface;
+use App\DTOs\CreateUserDTO;
+use App\DTOs\UpdateUserDTO;
 use App\Models\User;
 use App\Enums\UserRole;
 use App\Enums\ItemStatus;
@@ -94,8 +96,9 @@ class UserService implements UserServiceInterface
     /**
      * Create a new user
      */
-    public function createUser(array $data)
+    public function createUser(CreateUserDTO $dto)
     {
+        $data = $dto->toArray();
         $data['password'] = Hash::make($data['password']);
         return User::create($data);
     }
@@ -113,9 +116,10 @@ class UserService implements UserServiceInterface
      *
      * @throws BusinessException when business rules are violated
      */
-    public function updateUser($id, array $data)
+    public function updateUser($id, UpdateUserDTO $dto)
     {
         $user = $this->getUser($id);
+        $data = $dto->toArray();
 
         // Prevent admin from removing their own admin role
         if (Auth::id() === $user->id && ($data['role'] ?? $user->role) !== UserRole::ADMIN->value) {
