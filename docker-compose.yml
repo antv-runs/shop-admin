@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 
 services:
   shop-admin-db:
@@ -9,7 +9,7 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: ShopAdminDB
     ports:
-      - "3307:3306"
+      - '3307:3306'
     volumes:
       - shop-admin-db-data:/var/lib/mysql
     networks:
@@ -20,7 +20,7 @@ services:
     container_name: shop-admin-phpmyadmin
     restart: always
     ports:
-      - "8081:80"
+      - '8081:80'
     environment:
       PMA_HOST: shop-admin-db
       PMA_PORT: 3306
@@ -39,8 +39,8 @@ services:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: admin123
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - '9000:9000'
+      - '9001:9001'
     volumes:
       - shop-admin-minio-data:/data
     networks:
@@ -48,22 +48,51 @@ services:
 
   shop-admin-minio-init:
     image: minio/mc
+    restart: 'no'
     depends_on:
       - shop-admin-minio
     entrypoint: >
       /bin/sh -c "
-      sleep 5;
-      mc alias set minio http://shop-admin-minio:9000 admin admin123;
-      mc mb minio/shop-admin;
+      echo 'Waiting for MinIO...';
+      until mc alias set minio http://shop-admin-minio:9000 admin admin123; do
+        sleep 2;
+      done;
+      mc mb minio/shop-admin || true;
       mc anonymous set public minio/shop-admin;
-      exit 0;
+      echo 'MinIO bucket created';
       "
+    networks:
+      - shop-admin-network
+
+  shop-admin-redis:
+    image: redis:7
+    container_name: shop-admin-redis
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - shop-admin-redis-data:/data
+    networks:
+      - shop-admin-network
+
+  shop-admin-redis-insight:
+    image: redis/redisinsight:latest
+    container_name: shop-admin-redis-insight
+    restart: always
+    ports:
+      - '5540:5540'
+    environment:
+      RI_REDIS_HOST: shop-admin-redis
+      RI_REDIS_PORT: 6379
+    depends_on:
+      - shop-admin-redis
     networks:
       - shop-admin-network
 
 volumes:
   shop-admin-db-data:
   shop-admin-minio-data:
+  shop-admin-redis-data:
 
 networks:
   shop-admin-network:
