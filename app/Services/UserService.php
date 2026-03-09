@@ -8,13 +8,16 @@ use App\DTOs\CreateUserDTO;
 use App\DTOs\UpdateUserDTO;
 use App\Enums\UserRole;
 use App\Enums\ItemStatus;
+use App\Helpers\CacheHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use App\Exceptions\BusinessException;
 
 class UserService implements UserServiceInterface
 {
+    private const CACHE_TTL = 300; // 5 minutes
     private UserRepositoryInterface $userRepository;
 
     public function __construct(UserRepositoryInterface $userRepository)
@@ -32,31 +35,43 @@ class UserService implements UserServiceInterface
 
     /**
      * Get paginated users data with metadata
+     * Cached with TTL of 300 seconds
      */
     public function getListData(Request $request)
     {
         $perPage = (int)$request->input('per_page', 15);
-        $users = $this->userRepository->getAll($request, $perPage);
+        $search = $request->input('search', '');
+        $status = $request->input('status', ItemStatus::ACTIVE->value);
+        $role = $request->input('role', '');
+        $sortBy = $request->input('sort_by', 'id');
+        $sortOrder = $request->input('sort_order', 'desc');
+        $page = $request->input('page', 1);
+        
+        $cacheKey = "users:list:{$page}:{$perPage}:{$search}:{$status}:{$role}:{$sortBy}:{$sortOrder}";
+        
+        return CacheHelper::remember($cacheKey, self::CACHE_TTL, function () use ($request, $perPage) {
+            $users = $this->userRepository->getAll($request, $perPage);
 
-        return [
-            'data' => $users->items(),
-            'pagination' => [
-                'total' => $users->total(),
-                'per_page' => $users->perPage(),
-                'current_page' => $users->currentPage(),
-                'last_page' => $users->lastPage(),
-                'from' => $users->firstItem(),
-                'to' => $users->lastItem(),
-            ],
-            'filters' => [
-                'search' => $request->input('search'),
-                'status' => $request->input('status', ItemStatus::ACTIVE->value),
-                'role' => $request->input('role'),
-                'sort_by' => $request->input('sort_by', 'id'),
-                'sort_order' => $request->input('sort_order', 'desc'),
-            ],
-            'paginator' => $users
-        ];
+            return [
+                'data' => $users->items(),
+                'pagination' => [
+                    'total' => $users->total(),
+                    'per_page' => $users->perPage(),
+                    'current_page' => $users->currentPage(),
+                    'last_page' => $users->lastPage(),
+                    'from' => $users->firstItem(),
+                    'to' => $users->lastItem(),
+                ],
+                'filters' => [
+                    'search' => $request->input('search'),
+                    'status' => $request->input('status', ItemStatus::ACTIVE->value),
+                    'role' => $request->input('role'),
+                    'sort_by' => $request->input('sort_by', 'id'),
+                    'sort_order' => $request->input('sort_order', 'desc'),
+                ],
+                'paginator' => $users
+            ];
+        });
     }
 
     /**
@@ -74,15 +89,26 @@ class UserService implements UserServiceInterface
     {
         $data = $dto->toArray();
         $data['password'] = Hash::make($data['password']);
-        return $this->userRepository->create($data);
+        
+        $result = $this->userRepository->create($data);
+        
+        // Invalidate list cache
+        $this->invalidateUserListCache();
+        
+        return $result;
     }
 
     /**
      * Retrieve a single user by id
+     * Cached with TTL of 300 seconds
      */
     public function getUser($id)
     {
-        return $this->userRepository->findById($id);
+        $cacheKey = "users:detail:{$id}";
+        
+        return CacheHelper::remember($cacheKey, self::CACHE_TTL, function () use ($id) {
+            return $this->userRepository->findById($id);
+        });
     }
 
     /**
@@ -106,7 +132,13 @@ class UserService implements UserServiceInterface
             unset($data['password']);
         }
 
-        return $this->userRepository->update($user, $data);
+        $result = $this->userRepository->update($user, $data);
+        
+        // Invalidate caches
+        CacheHelper::forget("users:detail:{$id}");
+        $this->invalidateUserListCache();
+        
+        return $result;
     }
 
     /**
@@ -123,7 +155,13 @@ class UserService implements UserServiceInterface
             throw new BusinessException('You cannot delete your own account.');
         }
 
-        return $this->userRepository->delete($id);
+        $result = $this->userRepository->delete($id);
+        
+        // Invalidate caches
+        CacheHelper::forget("users:detail:{$id}");
+        $this->invalidateUserListCache();
+        
+        return $result;
     }
 
     /**
@@ -139,7 +177,12 @@ class UserService implements UserServiceInterface
      */
     public function restoreUser($id)
     {
-        return $this->userRepository->restore($id);
+        $result = $this->userRepository->restore($id);
+        
+        // Invalidate list cache
+        $this->invalidateUserListCache();
+        
+        return $result;
     }
 
     /**
@@ -147,6 +190,20 @@ class UserService implements UserServiceInterface
      */
     public function forceDeleteUser($id)
     {
-        return $this->userRepository->forceDelete($id);
+        $result = $this->userRepository->forceDelete($id);
+        
+        // Invalidate caches
+        CacheHelper::forget("users:detail:{$id}");
+        $this->invalidateUserListCache();
+        
+        return $result;
+    }
+    
+    /**
+     * Invalidate all user list caches
+     */
+    private function invalidateUserListCache()
+    {
+        CacheHelper::flushTags(['users:list']);
     }
 }

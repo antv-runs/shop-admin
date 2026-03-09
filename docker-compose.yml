@@ -68,6 +68,7 @@ services:
     image: redis:7
     container_name: shop-admin-redis
     restart: always
+    command: redis-server --requirepass redis123
     ports:
       - '6379:6379'
     volumes:
@@ -84,6 +85,7 @@ services:
     environment:
       RI_REDIS_HOST: shop-admin-redis
       RI_REDIS_PORT: 6379
+      RI_REDIS_PASSWORD: redis123
     depends_on:
       - shop-admin-redis
     networks:
