@@ -1,0 +1,36 @@
+@startuml
+title Cache Aside Strategy (Laravel + Redis)
+
+actor Client
+participant Controller
+participant Service
+participant "Redis Cache" as Cache
+participant Repository
+database DB
+
+Client -> Controller : GET /api/products
+Controller -> Service : getProducts()
+
+Service -> Cache : GET products:list
+
+alt Cache Hit
+    Cache --> Service : return cached products
+    Service --> Controller : products
+    Controller --> Client : response (fast)
+
+else Cache Miss
+    Cache --> Service : null
+
+    Service -> Repository : getProducts()
+    Repository -> DB : SELECT * FROM products
+    DB --> Repository : products
+
+    Repository --> Service : products
+
+    Service -> Cache : SET products:list (TTL=300)
+    Cache --> Service : OK
+
+    Service --> Controller : products
+    Controller --> Client : response
+end
+@enduml
