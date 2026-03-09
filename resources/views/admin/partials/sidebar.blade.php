@@ -24,7 +24,7 @@
     <div class="p-4 border-t">
         <div class="flex items-center space-x-3 mb-3">
             @if(auth()->user()->profile_image)
-                <img src="{{ Storage::url(auth()->user()->profile_image) }}" alt="{{ auth()->user()->name }}" class="w-10 h-10 rounded-full object-cover">
+                <img src="{{ auth()->user()->profile_image_url }}" alt="{{ auth()->user()->name }}" class="w-10 h-10 rounded-full object-cover">
             @else
                 <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-bold text-gray-600">
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}

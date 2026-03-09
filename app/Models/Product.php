@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -28,8 +29,14 @@ class Product extends Model
      */
     public function getImageUrlAttribute()
     {
-        return $this->image
-            ? app('App\Contracts\FileUploadServiceInterface')->getUrl($this->image, 'minio')
-            : null;
+        if (!$this->image) {
+            return null;
+        }
+
+        if (filter_var($this->image, FILTER_VALIDATE_URL)) {
+            return $this->image;
+        }
+
+        return Storage::url($this->image);
     }
 }

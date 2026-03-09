@@ -43,7 +43,7 @@
             <div>
                 <label class="block font-medium">Image (one):</label>
                 <div class="mb-2">
-                    <img id="preview" src="{{ $product->image ? Storage::url($product->image) : '' }}" alt="Product Image" class="h-24 w-auto object-cover{{ $product->image ? '' : ' hidden' }}">
+                    <img id="preview" src="{{ $product->image_url ?: '' }}" alt="Product Image" class="h-24 w-auto object-cover{{ $product->image ? '' : ' hidden' }}">
                 </div>
                 <input type="file" name="image" id="image" accept="image/*" class="mt-1 block w-full">
                 @error('image') <p class="text-red-600">{{ $message }}</p> @enderror
