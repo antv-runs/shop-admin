@@ -9,15 +9,15 @@ use App\DTOs\UpdateUserDTO;
 use App\Enums\UserRole;
 use App\Enums\ItemStatus;
 use App\Helpers\CacheHelper;
+use App\Constants\CacheKey;
+use App\Constants\CacheConstants;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use App\Exceptions\BusinessException;
 
 class UserService implements UserServiceInterface
 {
-    private const CACHE_TTL = 300; // 5 minutes
     private UserRepositoryInterface $userRepository;
 
     public function __construct(UserRepositoryInterface $userRepository)
@@ -47,9 +47,9 @@ class UserService implements UserServiceInterface
         $sortOrder = $request->input('sort_order', 'desc');
         $page = $request->input('page', 1);
         
-        $cacheKey = "users:list:{$page}:{$perPage}:{$search}:{$status}:{$role}:{$sortBy}:{$sortOrder}";
+        $cacheKey = CacheKey::userList($page, $perPage, $search, $status, $role, $sortBy, $sortOrder);
         
-        return CacheHelper::remember($cacheKey, self::CACHE_TTL, function () use ($request, $perPage) {
+        return CacheHelper::rememberWithTags(['users:list'], $cacheKey, CacheConstants::CACHE_TTL, function () use ($request, $perPage) {
             $users = $this->userRepository->getAll($request, $perPage);
 
             return [
@@ -104,9 +104,9 @@ class UserService implements UserServiceInterface
      */
     public function getUser($id)
     {
-        $cacheKey = "users:detail:{$id}";
+        $cacheKey = CacheKey::userDetail($id);
         
-        return CacheHelper::remember($cacheKey, self::CACHE_TTL, function () use ($id) {
+        return CacheHelper::remember($cacheKey, CacheConstants::CACHE_TTL, function () use ($id) {
             return $this->userRepository->findById($id);
         });
     }
@@ -135,7 +135,7 @@ class UserService implements UserServiceInterface
         $result = $this->userRepository->update($user, $data);
         
         // Invalidate caches
-        CacheHelper::forget("users:detail:{$id}");
+        CacheHelper::forget(CacheKey::userDetail($id));
         $this->invalidateUserListCache();
         
         return $result;
@@ -158,7 +158,7 @@ class UserService implements UserServiceInterface
         $result = $this->userRepository->delete($id);
         
         // Invalidate caches
-        CacheHelper::forget("users:detail:{$id}");
+        CacheHelper::forget(CacheKey::userDetail($id));
         $this->invalidateUserListCache();
         
         return $result;
@@ -193,7 +193,7 @@ class UserService implements UserServiceInterface
         $result = $this->userRepository->forceDelete($id);
         
         // Invalidate caches
-        CacheHelper::forget("users:detail:{$id}");
+        CacheHelper::forget(CacheKey::userDetail($id));
         $this->invalidateUserListCache();
         
         return $result;

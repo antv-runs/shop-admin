@@ -40,11 +40,18 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e) {
             try {
-                Log::error('Uncaught exception: ' . get_class($e) . ' - ' . $e->getMessage(), [
+                Log::error('Unhandled exception', [
                     'exception' => $e,
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'url' => request()->fullUrl(),
+                    'method' => request()->method(),
+                    'ip' => request()->ip(),
+                    'user_id' => optional(auth()->user())->id,
                 ]);
             } catch (Throwable $ex) {
-                // Prevent logging failure from crashing app
+                // Prevent logging failure from crashing the app
             }
         });
     }

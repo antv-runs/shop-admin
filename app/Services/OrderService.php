@@ -6,11 +6,11 @@ use App\Contracts\OrderServiceInterface;
 use App\Contracts\Repositories\OrderRepositoryInterface;
 use App\DTOs\CreateOrderDTO;
 use App\Helpers\CacheHelper;
-use Illuminate\Support\Facades\Cache;
+use App\Constants\CacheKey;
+use App\Constants\CacheConstants;
 
 class OrderService implements OrderServiceInterface
 {
-    private const CACHE_TTL = 300; // 5 minutes
     private OrderRepositoryInterface $orderRepository;
 
     public function __construct(OrderRepositoryInterface $orderRepository)
@@ -31,12 +31,12 @@ class OrderService implements OrderServiceInterface
     {
         $data = $dto->toArray();
         $userId = $data['user_id'];
-        
+
         $result = $this->orderRepository->create($data);
-        
+
         // Invalidate user's order list cache
-        Cache::tags(['orders:list'])->flush();
-        
+        CacheHelper::forget(CacheKey::userOrdersList($userId, 15));
+
         return $result;
     }
 
@@ -46,9 +46,9 @@ class OrderService implements OrderServiceInterface
      */
     public function getOrdersForUser($userId, $perPage = 15)
     {
-        $cacheKey = "orders:list:user:{$userId}:{$perPage}";
-        
-        return CacheHelper::remember($cacheKey, self::CACHE_TTL, function () use ($userId, $perPage) {
+        $cacheKey = CacheKey::userOrdersList($userId, $perPage);
+
+        return CacheHelper::remember($cacheKey, CacheConstants::CACHE_TTL, function () use ($userId, $perPage) {
             return $this->orderRepository->getOrdersForUser($userId, $perPage);
         });
     }
@@ -61,9 +61,9 @@ class OrderService implements OrderServiceInterface
      */
     public function getOrderForUser($orderId, $userId)
     {
-        $cacheKey = "orders:detail:{$orderId}";
-        
-        return CacheHelper::remember($cacheKey, self::CACHE_TTL, function () use ($orderId, $userId) {
+        $cacheKey = CacheKey::orderDetail($orderId);
+
+        return CacheHelper::remember($cacheKey, CacheConstants::CACHE_TTL, function () use ($orderId, $userId) {
             return $this->orderRepository->getOrderForUser($orderId, $userId);
         });
     }

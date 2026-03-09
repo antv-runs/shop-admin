@@ -17,16 +17,47 @@ class CacheHelper
      */
     public static function remember(string $key, int $ttl, \Closure $callback)
     {
+        $value = Cache::get($key);
+
         // Check if key exists in cache before using remember
-        if (Cache::has($key)) {
-            Log::channel('single')->info("Cache hit: {$key}");
-            return Cache::get($key);
+        if ($value !== null) {
+            Log::info("Cache hit: {$key}");
+            return $value;
         }
 
-        Log::channel('single')->info("Cache miss: {$key}");
+        Log::info("Cache miss: {$key}");
 
-        // Use Laravel's remember to cache the result
-        return Cache::remember($key, $ttl, $callback);
+        $value = $callback();
+        Cache::put($key, $value, $ttl);
+
+        return $value;
+    }
+
+    /**
+     * Remember data with cache hit/miss logging and tags
+     *
+     * @param array $tags
+     * @param string $key
+     * @param int $ttl
+     * @param \Closure $callback
+     * @return mixed
+     */
+    public static function rememberWithTags(array $tags, string $key, int $ttl, \Closure $callback)
+    {
+        $taggedCache = Cache::tags($tags);
+        $value = $taggedCache->get($key);
+
+        if ($value !== null) {
+            Log::info("Cache hit: {$key}", ['tags' => $tags]);
+            return $value;
+        }
+
+        Log::info("Cache miss: {$key}", ['tags' => $tags]);
+
+        $value = $callback();
+        $taggedCache->put($key, $value, $ttl);
+
+        return $value;
     }
 
     /**
@@ -38,7 +69,7 @@ class CacheHelper
     public static function forget(string $key): void
     {
         Cache::forget($key);
-        Log::channel('single')->info("Cache invalidated: {$key}");
+        Log::info("Cache invalidated: {$key}");
     }
 
     /**
@@ -51,7 +82,7 @@ class CacheHelper
     {
         foreach ($tags as $tag) {
             Cache::tags([$tag])->flush();
-            Log::channel('single')->info("Cache flushed: {$tag}");
+            Log::info("Cache flushed: {$tag}");
         }
     }
 }

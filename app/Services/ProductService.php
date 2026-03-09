@@ -11,11 +11,12 @@ use App\Contracts\FileUploadServiceInterface;
 use App\DTOs\CreateProductDTO;
 use App\DTOs\UpdateProductDTO;
 use App\Helpers\CacheHelper;
-use Illuminate\Support\Facades\Cache;
+use App\Constants\CacheKey;
+use App\Constants\CacheConstants;
+use App\Constants\CacheTag;
 
 class ProductService implements ProductServiceInterface
 {
-    private const CACHE_TTL = 300; // 5 minutes
     private FileUploadServiceInterface $fileUploadService;
     private ProductRepositoryInterface $productRepository;
     private CategoryRepositoryInterface $categoryRepository;
@@ -39,10 +40,10 @@ class ProductService implements ProductServiceInterface
         $search = $request->input('search', '');
         $categoryId = $request->input('category_id', '');
         $page = $request->input('page', 1);
-        
-        $cacheKey = "products:list:{$page}:{$perPage}:{$search}:{$categoryId}";
-        
-        return CacheHelper::remember($cacheKey, self::CACHE_TTL, function () use ($request, $perPage) {
+
+        $cacheKey = CacheKey::productList($page, $perPage, $search, $categoryId);
+
+        return CacheHelper::rememberWithTags([CacheConstants::TAG_PRODUCT_LIST], $cacheKey, CacheConstants::CACHE_TTL, function () use ($request, $perPage) {
             return $this->productRepository->getAll($request, $perPage);
         });
     }
@@ -61,10 +62,10 @@ class ProductService implements ProductServiceInterface
     public function createProduct(CreateProductDTO $dto)
     {
         $result = $this->productRepository->create($dto->toArray());
-        
+
         // Invalidate list cache
         $this->invalidateProductListCache();
-        
+
         return $result;
     }
 
@@ -74,9 +75,9 @@ class ProductService implements ProductServiceInterface
      */
     public function getProduct($id)
     {
-        $cacheKey = "products:detail:{$id}";
-        
-        return CacheHelper::remember($cacheKey, self::CACHE_TTL, function () use ($id) {
+        $cacheKey = CacheKey::productDetail($id);
+
+        return CacheHelper::remember($cacheKey, CacheConstants::CACHE_TTL, function () use ($id) {
             return $this->productRepository->findById($id);
         });
     }
@@ -95,11 +96,11 @@ class ProductService implements ProductServiceInterface
         }
 
         $result = $this->productRepository->update($product, $data);
-        
+
         // Invalidate caches
-        CacheHelper::forget("products:detail:{$product->id}");
+        CacheHelper::forget(CacheKey::productDetail($product->id));
         $this->invalidateProductListCache();
-        
+
         return $result;
     }
 
@@ -109,11 +110,11 @@ class ProductService implements ProductServiceInterface
     public function deleteProduct($id)
     {
         $result = $this->productRepository->delete($id);
-        
+
         // Invalidate caches
-        CacheHelper::forget("products:detail:{$id}");
+        CacheHelper::forget(CacheKey::productDetail($id));
         $this->invalidateProductListCache();
-        
+
         return $result;
     }
 
@@ -131,10 +132,10 @@ class ProductService implements ProductServiceInterface
     public function restoreProduct($id)
     {
         $result = $this->productRepository->restore($id);
-        
+
         // Invalidate list cache
         $this->invalidateProductListCache();
-        
+
         return $result;
     }
 
@@ -151,18 +152,18 @@ class ProductService implements ProductServiceInterface
         }
 
         $this->productRepository->forceDelete($id);
-        
+
         // Invalidate caches
-        CacheHelper::forget("products:detail:{$id}");
+        CacheHelper::forget(CacheKey::productDetail($id));
         $this->invalidateProductListCache();
     }
-    
+
     /**
      * Invalidate all product list caches
      */
     private function invalidateProductListCache()
     {
-        CacheHelper::flushTags(['products:list']);
+        CacheHelper::flushTags([CacheConstants::TAG_PRODUCT_LIST]);
     }
 
     /**

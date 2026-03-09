@@ -8,12 +8,13 @@ use App\DTOs\CreateCategoryDTO;
 use App\DTOs\UpdateCategoryDTO;
 use App\Models\Category;
 use App\Helpers\CacheHelper;
+use App\Constants\CacheKey;
+use App\Constants\CacheConstants;
+use App\Constants\CacheTag;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Cache;
 
 class CategoryService implements CategoryServiceInterface
 {
-    private const CACHE_TTL = 300; // 5 minutes
     private CategoryRepositoryInterface $categoryRepository;
 
     public function __construct(CategoryRepositoryInterface $categoryRepository)
@@ -30,9 +31,9 @@ class CategoryService implements CategoryServiceInterface
         $search = $request->input('search', '');
         $page = $request->input('page', 1);
 
-        $cacheKey = "categories:list:{$page}:{$perPage}:{$search}";
+        $cacheKey = CacheKey::categoryList($page, $perPage, $search);
 
-        return CacheHelper::remember($cacheKey, self::CACHE_TTL, function () use ($request, $perPage) {
+        return CacheHelper::rememberWithTags([CacheConstants::TAG_CATEGORY_LIST], $cacheKey, CacheConstants::CACHE_TTL, function () use ($request, $perPage) {
             return $this->categoryRepository->getAll($request, $perPage);
         });
     }
@@ -43,9 +44,9 @@ class CategoryService implements CategoryServiceInterface
      */
     public function getCategory($id)
     {
-        $cacheKey = "categories:detail:{$id}";
+        $cacheKey = CacheKey::categoryDetail($id);
 
-        return CacheHelper::remember($cacheKey, self::CACHE_TTL, function () use ($id) {
+        return CacheHelper::remember($cacheKey, CacheConstants::CACHE_TTL, function () use ($id) {
             return $this->categoryRepository->findById($id);
         });
     }
@@ -93,7 +94,7 @@ class CategoryService implements CategoryServiceInterface
         $result = $this->categoryRepository->update($category, $data);
 
         // Invalidate caches
-        CacheHelper::forget("categories:detail:{$category->id}");
+        CacheHelper::forget(CacheKey::categoryDetail($category->id));
         $this->invalidateCategoryListCache();
 
         return $result;
@@ -107,7 +108,7 @@ class CategoryService implements CategoryServiceInterface
         $result = $this->categoryRepository->delete($id);
 
         // Invalidate caches
-        CacheHelper::forget("categories:detail:{$id}");
+        CacheHelper::forget(CacheKey::categoryDetail($id));
         $this->invalidateCategoryListCache();
 
         return $result;
@@ -142,7 +143,7 @@ class CategoryService implements CategoryServiceInterface
         $result = $this->categoryRepository->forceDelete($id);
 
         // Invalidate caches
-        CacheHelper::forget("categories:detail:{$id}");
+        CacheHelper::forget(CacheKey::categoryDetail($id));
         $this->invalidateCategoryListCache();
 
         return $result;
@@ -153,6 +154,6 @@ class CategoryService implements CategoryServiceInterface
      */
     private function invalidateCategoryListCache()
     {
-        CacheHelper::flushTags(['categories:list']);
+        CacheHelper::flushTags([CacheConstants::TAG_CATEGORY_LIST]);
     }
 }
