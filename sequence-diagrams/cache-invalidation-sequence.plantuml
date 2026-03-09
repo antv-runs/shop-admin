@@ -1,0 +1,29 @@
+@startuml
+title Cache Invalidation Strategy
+
+actor Client
+participant Controller
+participant Service
+participant "Redis Cache" as Cache
+participant Repository
+database DB
+
+Client -> Controller : PATCH /api/products/{id}
+
+Controller -> Service : updateProduct(id,data)
+
+Service -> Repository : update(id,data)
+Repository -> DB : UPDATE products
+DB --> Repository : success
+
+Repository --> Service : updated product
+
+Service -> Cache : DEL products:list
+Service -> Cache : DEL products:detail:{id}
+
+Cache --> Service : OK
+
+Service --> Controller : updated product
+Controller --> Client : response
+
+@enduml

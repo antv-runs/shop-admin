@@ -1,0 +1,38 @@
+@startuml
+title Cache Detail API Strategy GET /api/products/{id}
+
+actor Client
+participant Controller
+participant Service
+participant "Redis Cache" as Cache
+participant Repository
+database DB
+
+Client -> Controller : GET /api/products/{id}
+
+Controller -> Service : getProductDetail(id)
+
+Service -> Cache : GET products:detail:{id}
+
+alt Cache Hit
+    Cache --> Service : product
+    Service --> Controller : product
+    Controller --> Client : response (fast)
+
+else Cache Miss
+    Cache --> Service : null
+
+    Service -> Repository : findById(id)
+    Repository -> DB : SELECT * FROM products WHERE id=?
+    DB --> Repository : product
+
+    Repository --> Service : product
+
+    Service -> Cache : SET products:detail:{id} TTL=300
+    Cache --> Service : OK
+
+    Service --> Controller : product
+    Controller --> Client : response
+end
+
+@enduml

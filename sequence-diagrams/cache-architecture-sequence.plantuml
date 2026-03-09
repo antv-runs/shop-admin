@@ -1,0 +1,31 @@
+@startuml
+title Laravel Redis Cache Flow
+
+actor Client
+participant Controller
+participant Service
+participant "Redis Cache" as Cache
+participant Repository
+database Database
+
+Client -> Controller : API Request
+
+Controller -> Service : handleRequest()
+
+Service -> Cache : check cache
+
+alt Cache Hit
+    Cache --> Service : cached data
+else Cache Miss
+    Service -> Repository : query data
+    Repository -> Database : SQL query
+    Database --> Repository : data
+    Repository --> Service : data
+
+    Service -> Cache : store cache (TTL)
+end
+
+Service --> Controller : response
+Controller --> Client : API Response
+
+@enduml

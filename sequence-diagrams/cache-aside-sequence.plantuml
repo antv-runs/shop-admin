@@ -33,4 +33,5 @@ else Cache Miss
     Service --> Controller : products
     Controller --> Client : response
 end
+
 @enduml
