@@ -19,7 +19,7 @@
                     <div class="flex items-center mb-8">
                         <div class="w-24 h-24 mr-6">
                             @if($user->profile_image)
-                                <img src="{{ Storage::disk('minio')->url($user->profile_image) }}" alt="{{ $user->name }}" class="w-full h-full rounded-full object-cover border-4 border-blue-500">
+                                <img src="{{ Storage::url($user->profile_image) }}" alt="{{ $user->name }}" class="w-full h-full rounded-full object-cover border-4 border-blue-500">
                             @else
                                 <div class="w-full h-full rounded-full bg-gray-300 flex items-center justify-center border-4 border-gray-300">
                                     <span class="text-2xl font-bold text-gray-600">{{ strtoupper(substr($user->name, 0, 1)) }}</span>

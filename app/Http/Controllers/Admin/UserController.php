@@ -13,14 +13,8 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    /**
-     * @var UserServiceInterface
-     */
-    private $userService;
+    private UserServiceInterface $userService;
 
-    /**
-     * Inject UserServiceInterface
-     */
     public function __construct(UserServiceInterface $userService)
     {
         $this->userService = $userService;
@@ -79,10 +73,10 @@ class UserController extends Controller
     {
         try {
             $validated = $request->validated();
-            
+
             // Create DTO from validated data
             $dto = UpdateUserDTO::fromArray($validated);
-            
+
             $user = $this->userService->updateUser($id, $dto);
 
             if ($request->wantsJson()) {

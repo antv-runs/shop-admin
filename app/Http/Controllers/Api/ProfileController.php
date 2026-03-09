@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Services\ProfileApiService;
+use App\Contracts\ProfileServiceInterface;
 use App\Http\Requests\ProfileApiRequest;
 use App\Http\Resources\UserResource;
 use App\DTOs\UpdateUserProfileDTO;
-use Symfony\Component\HttpFoundation\Response;
 
 class ProfileController extends BaseController
 {
-    private ProfileApiService $profileService;
+    private ProfileServiceInterface $profileService;
 
-    public function __construct(ProfileApiService $profileService)
+    public function __construct(ProfileServiceInterface $profileService)
     {
         $this->profileService = $profileService;
     }

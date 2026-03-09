@@ -6,18 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Contracts\ProfileServiceInterface;
 use App\Http\Requests\ProfileApiRequest;
 use App\DTOs\UpdateUserProfileDTO;
-use Illuminate\Http\Request;
 
 class ProfileController extends Controller
 {
-    /**
-     * @var ProfileServiceInterface
-     */
-    private $profileService;
+    private ProfileServiceInterface $profileService;
 
-    /**
-     * Inject ProfileServiceInterface
-     */
     public function __construct(ProfileServiceInterface $profileService)
     {
         $this->profileService = $profileService;

@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\ProductApiRequest;
 use App\Http\Requests\ExportProductRequest;
 use App\Http\Resources\ProductResource;
-use App\Services\ProductApiService;
 use App\Contracts\FileUploadServiceInterface;
+use App\Contracts\ProductServiceInterface;
 use App\DTOs\CreateProductDTO;
 use App\DTOs\UpdateProductDTO;
 use Illuminate\Http\Request;
@@ -15,10 +15,10 @@ use Illuminate\Support\Facades\Log;
 
 class ProductController extends BaseController
 {
-    private ProductApiService $productService;
+    private ProductServiceInterface $productService;
     private FileUploadServiceInterface $fileUploadService;
 
-    public function __construct(ProductApiService $productService, FileUploadServiceInterface $fileUploadService)
+    public function __construct(ProductServiceInterface $productService, FileUploadServiceInterface $fileUploadService)
     {
         $this->productService = $productService;
         $this->fileUploadService = $fileUploadService;
@@ -104,7 +104,7 @@ class ProductController extends BaseController
 
         // Create DTO from validated data
         $dto = CreateProductDTO::fromArray($validated);
-        
+
         $product = $this->productService->createProduct($dto);
 
         return $this->success(

@@ -67,8 +67,8 @@
         <td class="px-4 py-2">{{ $product->id }}</td>
         <td class="px-4 py-2">
             @if($product->image)
-                <a href="{{ Storage::disk('minio')->url($product->image) }}" target="_blank">
-                    <img src="{{ Storage::disk('minio')->url($product->image) }}" alt="img" class="h-12 w-12 object-cover rounded">
+                <a href="{{ Storage::url($product->image) }}" target="_blank">
+                    <img src="{{ Storage::url($product->image) }}" alt="img" class="h-12 w-12 object-cover rounded">
                 </a>
             @else
                 <span class="text-sm text-gray-500">—</span>

@@ -50,8 +50,9 @@ interface FileUploadServiceInterface
 
     /**
      * Get URL for a file in storage
+     * Uses the configured default filesystem disk
      */
-    public function getUrl(string $path, string $disk = 'minio'): string;
+    public function getUrl(string $path): string;
 
     /**
      * Get last modified timestamp of a file

@@ -11,7 +11,7 @@
     },
     "servers": [
         {
-            "url": "https://api-laravel.vanannek.blog/",
+            "url": "https://api-laravel.vanannek.blog",
             "description": "Production Server"
         },
         {

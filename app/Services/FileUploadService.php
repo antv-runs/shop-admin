@@ -16,13 +16,19 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class FileUploadService implements FileUploadServiceInterface
 {
+    protected string $disk;
+
+    public function __construct()
+    {
+        $this->disk = config('filesystems.default');
+    }
+
     /**
      * Upload a product image and return the path
      */
     public function uploadProductImage(UploadedFile $file): string
     {
-        $disk = config('filesystems.default');
-        return $file->store('products', $disk);
+        return $file->store('products', $this->disk);
     }
 
     /**
@@ -30,8 +36,7 @@ class FileUploadService implements FileUploadServiceInterface
      */
     public function uploadProfileImage(UploadedFile $file): string
     {
-        $disk = config('filesystems.default');
-        return $file->store('profile-images', $disk);
+        return $file->store('profile-images', $this->disk);
     }
 
     /**
@@ -39,10 +44,9 @@ class FileUploadService implements FileUploadServiceInterface
      */
     public function deleteFile(string $path): void
     {
-        $disk = config('filesystems.default');
-        if ($path && Storage::disk($disk)->exists($path)) {
+        if ($path && Storage::disk($this->disk)->exists($path)) {
             try {
-                Storage::disk($disk)->delete($path);
+                Storage::disk($this->disk)->delete($path);
             } catch (\Throwable $e) {
                 // Log or handle silently
             }
@@ -65,8 +69,7 @@ class FileUploadService implements FileUploadServiceInterface
      */
     public function fileExists(string $path): bool
     {
-        $disk = config('filesystems.default');
-        return Storage::disk($disk)->exists($path);
+        return Storage::disk($this->disk)->exists($path);
     }
 
     /**
@@ -74,8 +77,7 @@ class FileUploadService implements FileUploadServiceInterface
      */
     public function putContent(string $path, string $content): string
     {
-        $disk = config('filesystems.default');
-        Storage::disk($disk)->put($path, $content);
+        Storage::disk($this->disk)->put($path, $content);
         return $path;
     }
 
@@ -84,18 +86,18 @@ class FileUploadService implements FileUploadServiceInterface
      */
     public function makeDirectory(string $path): void
     {
-        $disk = config('filesystems.default');
-        if (!Storage::disk($disk)->exists($path)) {
-            Storage::disk($disk)->makeDirectory($path);
+        if (!Storage::disk($this->disk)->exists($path)) {
+            Storage::disk($this->disk)->makeDirectory($path);
         }
     }
 
     /**
      * Get URL for a file in storage
+     * Uses the configured default filesystem disk
      */
-    public function getUrl(string $path, string $disk = 'minio'): string
+    public function getUrl(string $path): string
     {
-        return Storage::disk($disk)->url($path);
+        return Storage::disk($this->disk)->url($path);
     }
 
     /**
@@ -103,8 +105,7 @@ class FileUploadService implements FileUploadServiceInterface
      */
     public function getLastModified(string $path): int
     {
-        $disk = config('filesystems.default');
-        return Storage::disk($disk)->lastModified($path);
+        return Storage::disk($this->disk)->lastModified($path);
     }
 
     /**
@@ -112,7 +113,6 @@ class FileUploadService implements FileUploadServiceInterface
      */
     public function download(string $path, string $filename, array $headers = []): StreamedResponse
     {
-        $disk = config('filesystems.default');
-        return Storage::disk($disk)->download($path, $filename, $headers);
+        return Storage::disk($this->disk)->download($path, $filename, $headers);
     }
 }

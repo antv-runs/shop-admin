@@ -178,7 +178,7 @@ class ExportProductsJob implements ShouldQueue
                 $product->price,
                 $product->category?->name ?? 'N/A',
                 $product->description,
-                $product->image ? $fileUploadService->getUrl($product->image, 'minio') : 'N/A',
+                $product->image ? $fileUploadService->getUrl($product->image) : 'N/A',
                 $product->created_at->format('Y-m-d H:i:s'),
             ]);
         }
