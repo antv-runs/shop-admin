@@ -24,11 +24,19 @@ class FileUploadService implements FileUploadServiceInterface
     }
 
     /**
-     * Upload a product image and return the path
+     * Upload a product image and return the storage path.
+     *
+     * Uses configured disk (which may be "s3" in production).  The
+     * file is stored under the `products/` directory and is marked as
+     * publicly visible.  The returned value is the relative path that
+     * can be stored in the database.
      */
     public function uploadProductImage(UploadedFile $file): string
     {
-        return $file->store('products', $this->disk);
+        // putFile automatically generates a unique name (hashing the
+        // original filename).  We explicitly request `public` visibility
+        // to ensure S3 objects are accessible.
+        return Storage::disk($this->disk)->putFile('products', $file, 'public');
     }
 
     /**

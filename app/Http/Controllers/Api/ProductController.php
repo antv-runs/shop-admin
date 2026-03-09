@@ -9,6 +9,8 @@ use App\Contracts\FileUploadServiceInterface;
 use App\Contracts\ProductServiceInterface;
 use App\DTOs\CreateProductDTO;
 use App\DTOs\UpdateProductDTO;
+use App\DTOs\UploadImageDTO;
+use App\Http\Requests\UploadImageRequest;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Log;
@@ -111,6 +113,82 @@ class ProductController extends BaseController
             new ProductResource($product['data']),
             'Product created successfully',
             Response::HTTP_CREATED
+        );
+    }
+
+    /**
+     * Upload product image
+     *
+     * @OA\Post(
+     *     path="/api/products/upload",
+     *     summary="Upload product image",
+     *     description="Upload an image for a product and update its image path. The image will be stored on Amazon S3.",
+     *     tags={"Products"},
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"id","image"},
+     *
+     *                 @OA\Property(
+     *                     property="id",
+     *                     type="integer",
+     *                     example=1,
+     *                     description="ID of the product"
+     *                 ),
+     *
+     *                 @OA\Property(
+     *                     property="image",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Image file (jpeg, png, jpg, webp, max 2MB)"
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Image uploaded successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Product image uploaded successfully"),
+     *             @OA\Property(property="data", ref="#/components/schemas/Product")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=403,
+     *         description="Admin access required"
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Product not found"
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error"
+     *     )
+     * )
+     */
+    public function upload(UploadImageRequest $request)
+    {
+        $dto = UploadImageDTO::fromArray($request->toArray());
+        $product = $this->productService->uploadProductImage($dto);
+
+        return $this->success(
+            new ProductResource($product),
+            'Product image updated successfully'
         );
     }
 

@@ -11,10 +11,6 @@
     },
     "servers": [
         {
-            "url": "https://api-laravel.vanannek.blog",
-            "description": "Production Server"
-        },
-        {
             "url": "http://localhost:8000",
             "description": "Local Server"
         }
@@ -1174,6 +1170,84 @@
                     },
                     "403": {
                         "description": "Admin access required"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/products/upload": {
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Upload product image",
+                "description": "Upload an image for a product and update its image path. The image will be stored on Amazon S3.",
+                "operationId": "b7730b90ea2ab130219528aa7018a283",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "id",
+                                    "image"
+                                ],
+                                "properties": {
+                                    "id": {
+                                        "description": "ID of the product",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "image": {
+                                        "description": "Image file (jpeg, png, jpg, webp, max 2MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Image uploaded successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product image uploaded successfully"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Product"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Admin access required"
+                    },
+                    "404": {
+                        "description": "Product not found"
                     },
                     "422": {
                         "description": "Validation error"

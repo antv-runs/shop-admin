@@ -87,6 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Products
         Route::prefix('products')->controller(ProductController::class)->group(function () {
             Route::post('/', 'store');
+            Route::post('/upload', 'upload');
             Route::get('/trashed', 'trashed');
             Route::post('/export', 'export');
 

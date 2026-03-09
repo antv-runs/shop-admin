@@ -5,6 +5,7 @@ namespace App\Contracts;
 use App\Models\Product;
 use App\DTOs\CreateProductDTO;
 use App\DTOs\UpdateProductDTO;
+use App\DTOs\UploadImageDTO;
 
 interface ProductServiceInterface
 {
@@ -57,4 +58,9 @@ interface ProductServiceInterface
      * Export products to CSV/Excel via queue
      */
     public function exportProducts(int $userId, array $filters = [], string $format = 'csv');
+
+    /**
+     * Upload a product image and return public URL (S3)
+     */
+    public function uploadProductImage(UploadImageDTO $dto);
 }

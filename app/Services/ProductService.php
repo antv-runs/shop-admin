@@ -14,6 +14,7 @@ use App\Helpers\CacheHelper;
 use App\Constants\CacheKey;
 use App\Constants\CacheConstants;
 use App\Constants\CacheTag;
+use App\DTOs\UploadImageDTO;
 
 class ProductService implements ProductServiceInterface
 {
@@ -178,5 +179,25 @@ class ProductService implements ProductServiceInterface
     public function exportProducts(int $userId, array $filters = [], string $format = 'csv'): void
     {
         ExportProductsJob::dispatch($userId, $filters, $format);
+    }
+
+    /**
+     * Upload a single product image and return a publicly accessible URL.
+     */
+    public function uploadProductImage(UploadImageDTO $dto): Product
+    {
+        $path = $this->fileUploadService->uploadProductImage($dto->image);
+
+        $product = $this->productRepository->findById($dto->id);
+
+        $saved = $this->productRepository->update($product, [
+            'image' => $path
+        ]);
+
+        // Invalidate caches
+        CacheHelper::forget(CacheKey::productDetail($dto->id));
+        $this->invalidateProductListCache();
+
+        return $saved;
     }
 }
