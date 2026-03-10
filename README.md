@@ -1,65 +1,145 @@
-# 🛒 Shop Admin - Laravel 8
-# � Shop Admin (Laravel)
+# Shop Admin Blade/API
 
-This repository contains a Laravel-based admin panel and simple store management app.
+Laravel backend Blade/API running with Docker.
 
-Requirements (if running locally)
-- Docker & Docker Compose (recommended)
-- PHP 8.2 (if running without Docker)
-- Composer
+---
 
-2) Development (use `docker-compose.dev.yml` for DB + phpMyAdmin and run PHP locally)
+## Requirements
 
-This flow is useful if you prefer running PHP on your host machine but want a containerized database.
+- Docker >= 24
+- Docker Compose
 
-- Start only the DB + phpMyAdmin services:
+---
 
-```bash
-docker compose -f docker-compose.dev.yml up -d
-```
+## Setup
 
-- Copy `.env` and update DB settings to connect from your host to the MySQL container (note the forwarded port 3307):
-
-```
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3307
-DB_DATABASE=ShopAdminDB
-DB_USERNAME=root
-DB_PASSWORD=root
-```
-
-- Install dependencies and run the app on your machine:
+Clone project
 
 ```bash
-composer install
+git clone https://github.com/antv-runs/shop-admin.git
+cd shop-admin
+```
+
+Create environment file
+
+```bash
 cp .env.example .env
-php artisan key:generate
-php artisan migrate
-php artisan db:seed
-php artisan serve
 ```
 
-- Open the app at:
+Then copy the configuration from one of the following files into `.env` depending on your environment:
 
-http://127.0.0.1:8000
+- `.env.local` for local development
 
-- phpMyAdmin is available at:
+- `.env.production` for production
 
-http://127.0.0.1:8081
+---
 
-Helpful artisan commands
+## Build Image (Optional)
+
+> The image has already been published on Docker Hub, so you normally **do not need to build it manually**.
+
+> Only run the build command if you want to **build the image directly from the source code**.
 
 ```bash
-php artisan view:clear
-php artisan route:clear
-php artisan config:clear
+docker build --target=prod -t antvrunss/shop-admin-api:latest .
 ```
 
-Notes
-- If you run the full Docker Compose setup, be sure your `.env` DB_HOST is `db` (the service name). If you run the DB-only dev compose and use `php artisan serve` from the host, point DB_HOST to `127.0.0.1` and DB_PORT to `3307` (the port mapped in `docker-compose.dev.yml`).
-- Default seeded users (see DatabaseSeeder):
-	- admin@example.com / password (admin)
-	- user1@example.com / password (user)
-	- user2@example.com / password (user)
-# shop-admin
+---
+
+## Run Containers
+
+```bash
+docker-compose up -d
+```
+
+Services will start:
+
+- Nginx
+- PHP-FPM
+- MySQL
+- Redis
+- Queue worker
+- Scheduler
+
+---
+
+## Initialize Application
+
+Run these commands only for the first time setup: generate key - Run migrations - Run seeder - Cache config
+
+```bash
+docker exec -it shop-admin-api-prod php artisan key:generate
+docker exec -it shop-admin-api-prod php artisan migrate --force
+docker exec -it shop-admin-api-prod php artisan db:seed
+docker exec -it shop-admin-api-prod php artisan config:cache
+```
+
+## Access
+
+Blade App
+
+```
+http://localhost:8000
+```
+
+RESTful API (Swagger UI)
+
+```
+http://localhost:8000/api/documentation
+```
+
+---
+
+## Useful Commands
+
+Logs API
+
+```bash
+docker logs shop-admin-api-prod
+```
+
+Logs Queue
+
+```bash
+docker logs shop-admin-queue-prod
+```
+
+Logs Scheduler
+
+```bash
+docker logs shop-admin-scheduler-prod
+```
+
+Stop
+
+```bash
+docker-compose down
+```
+
+# Test Accounts
+
+| Role  | Email                 | Password |
+| ----- | --------------------- | -------- |
+| Admin | uter.vanan@gmail.com  | password |
+| User  | vanantran05@gmail.com | password |
+
+> These accounts are for testing purposes only.
+
+> The **User** account is used to test order placement.
+
+> The **Admin** account is for testing management APIs.
+
+# Database Connection (Local)
+
+The application uses MySQL as the primary database.
+
+Default connection settings:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=shop_admin
+DB_USERNAME=shop
+DB_PASSWORD=shop
+```

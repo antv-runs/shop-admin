@@ -39,6 +39,8 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_USER: shop
       MYSQL_PASSWORD: shop
+    ports:
+      - '3306:3306'
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -48,6 +50,9 @@ services:
     image: redis:alpine
     container_name: shop-admin-redis-prod
     restart: unless-stopped
+    command: redis-server --requirepass redis123
+    ports:
+      - '6379:6379'
     volumes:
       - redis_data:/data
     networks:
