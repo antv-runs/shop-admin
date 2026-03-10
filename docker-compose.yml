@@ -1,100 +1,93 @@
 version: '3.8'
 
 services:
-  shop-admin-db:
+  app:
+    image: antvrunss/shop-admin-api:latest
+    container_name: shop-admin-api-prod
+    restart: unless-stopped
+    working_dir: /var/www
+    env_file:
+      - .env
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - shop-admin-api-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: shop-admin-nginx-prod
+    restart: unless-stopped
+    ports:
+      - '8000:80'
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - shop-admin-api-network
+
+  mysql:
     image: mysql:8.0
-    container_name: shop-admin-mysql
-    restart: always
+    container_name: shop-admin-mysql-prod
+    restart: unless-stopped
     environment:
+      MYSQL_DATABASE: shop_admin
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: ShopAdminDB
-    ports:
-      - '3307:3306'
+      MYSQL_USER: shop
+      MYSQL_PASSWORD: shop
     volumes:
-      - shop-admin-db-data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
     networks:
-      - shop-admin-network
+      - shop-admin-api-network
 
-  shop-admin-phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: shop-admin-phpmyadmin
-    restart: always
-    ports:
-      - '8081:80'
-    environment:
-      PMA_HOST: shop-admin-db
-      PMA_PORT: 3306
-      MYSQL_ROOT_PASSWORD: root
-    depends_on:
-      - shop-admin-db
-    networks:
-      - shop-admin-network
-
-  shop-admin-minio:
-    image: minio/minio:RELEASE.2025-04-08T15-41-24Z
-    container_name: shop-admin-minio
-    restart: always
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: admin
-      MINIO_ROOT_PASSWORD: admin123
-    ports:
-      - '9000:9000'
-      - '9001:9001'
+  redis:
+    image: redis:alpine
+    container_name: shop-admin-redis-prod
+    restart: unless-stopped
     volumes:
-      - shop-admin-minio-data:/data
+      - redis_data:/data
     networks:
-      - shop-admin-network
+      - shop-admin-api-network
 
-  shop-admin-minio-init:
-    image: minio/mc
-    restart: 'no'
-    depends_on:
-      - shop-admin-minio
-    entrypoint: >
-      /bin/sh -c "
-      echo 'Waiting for MinIO...';
-      until mc alias set minio http://shop-admin-minio:9000 admin admin123; do
-        sleep 2;
-      done;
-      mc mb minio/shop-admin || true;
-      mc anonymous set public minio/shop-admin;
-      echo 'MinIO bucket created';
-      "
-    networks:
-      - shop-admin-network
-
-  shop-admin-redis:
-    image: redis:7
-    container_name: shop-admin-redis
-    restart: always
-    command: redis-server --requirepass redis123
-    ports:
-      - '6379:6379'
+  queue:
+    image: antvrunss/shop-admin-api:latest
+    container_name: shop-admin-queue-prod
+    restart: unless-stopped
+    working_dir: /var/www
+    env_file:
+      - .env
     volumes:
-      - shop-admin-redis-data:/data
-    networks:
-      - shop-admin-network
-
-  shop-admin-redis-insight:
-    image: redis/redisinsight:latest
-    container_name: shop-admin-redis-insight
-    restart: always
-    ports:
-      - '5540:5540'
-    environment:
-      RI_REDIS_HOST: shop-admin-redis
-      RI_REDIS_PORT: 6379
-      RI_REDIS_PASSWORD: redis123
+      - ./:/var/www
+    command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
     depends_on:
-      - shop-admin-redis
+      - redis
+      - mysql
     networks:
-      - shop-admin-network
+      - shop-admin-api-network
 
-volumes:
-  shop-admin-db-data:
-  shop-admin-minio-data:
-  shop-admin-redis-data:
+  scheduler:
+    image: antvrunss/shop-admin-api:latest
+    container_name: shop-admin-scheduler-prod
+    restart: unless-stopped
+    working_dir: /var/www
+    env_file:
+      - .env
+    volumes:
+      - ./:/var/www
+    command: php artisan schedule:work
+    depends_on:
+      - app
+    networks:
+      - shop-admin-api-network
 
 networks:
-  shop-admin-network:
+  shop-admin-api-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
