@@ -36,7 +36,7 @@ class FileUploadService implements FileUploadServiceInterface
         // putFile automatically generates a unique name (hashing the
         // original filename).  We explicitly request `public` visibility
         // to ensure S3 objects are accessible.
-        return Storage::disk($this->disk)->putFile('products', $file, 'public');
+        return Storage::disk($this->disk)->putFile('products', $file);
     }
 
     /**
