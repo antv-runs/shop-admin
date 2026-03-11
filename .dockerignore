@@ -10,3 +10,7 @@ public/hot
 npm-debug.log
 yarn-error.log
 docker-compose.override.yml
+
+envs
+sql-utils
+sequence-diagrams
