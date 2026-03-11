@@ -28,8 +28,8 @@ class CategoryService implements CategoryServiceInterface
      */
     public function getAllCategories(\Illuminate\Http\Request $request, $perPage = 15)
     {
-        $search = $request->input('search', '');
-        $page = $request->input('page', 1);
+        $search = (string) $request->input('search');
+        $page = (int) $request->input('page', 1);
 
         $cacheKey = CacheKey::categoryList($page, $perPage, $search);
 

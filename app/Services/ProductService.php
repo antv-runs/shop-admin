@@ -38,9 +38,9 @@ class ProductService implements ProductServiceInterface
      */
     public function getAllProducts(\Illuminate\Http\Request $request, $perPage = 10)
     {
-        $search = $request->input('search', '');
-        $categoryId = $request->input('category_id', '');
-        $page = $request->input('page', 1);
+        $search = (string) $request->input('search', '');
+        $categoryId = (string) $request->input('category_id', '');
+        $page = (int) $request->input('page', 1);
 
         $cacheKey = CacheKey::productList($page, $perPage, $search, $categoryId);
 

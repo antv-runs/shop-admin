@@ -40,16 +40,16 @@ class UserService implements UserServiceInterface
     public function getListData(Request $request)
     {
         $perPage = (int)$request->input('per_page', 15);
-        $search = $request->input('search', '');
-        $status = $request->input('status', ItemStatus::ACTIVE->value);
-        $role = $request->input('role', '');
-        $sortBy = $request->input('sort_by', 'id');
-        $sortOrder = $request->input('sort_order', 'desc');
-        $page = $request->input('page', 1);
-        
+        $search = (string) $request->input('search', '');
+        $status = (string) $request->input('status', ItemStatus::ACTIVE->value);
+        $role = (string) $request->input('role', '');
+        $sortBy = (string) $request->input('sort_by', 'id');
+        $sortOrder = (string) $request->input('sort_order', 'desc');
+        $page = (int) $request->input('page', 1);
+
         $cacheKey = CacheKey::userList($page, $perPage, $search, $status, $role, $sortBy, $sortOrder);
-        
-        return CacheHelper::rememberWithTags(['users:list'], $cacheKey, CacheConstants::CACHE_TTL, function () use ($request, $perPage) {
+
+        return CacheHelper::rememberWithTags([CacheConstants::TAG_USER_LIST], $cacheKey, CacheConstants::CACHE_TTL, function () use ($request, $perPage) {
             $users = $this->userRepository->getAll($request, $perPage);
 
             return [
@@ -89,12 +89,12 @@ class UserService implements UserServiceInterface
     {
         $data = $dto->toArray();
         $data['password'] = Hash::make($data['password']);
-        
+
         $result = $this->userRepository->create($data);
-        
+
         // Invalidate list cache
         $this->invalidateUserListCache();
-        
+
         return $result;
     }
 
@@ -105,7 +105,7 @@ class UserService implements UserServiceInterface
     public function getUser($id)
     {
         $cacheKey = CacheKey::userDetail($id);
-        
+
         return CacheHelper::remember($cacheKey, CacheConstants::CACHE_TTL, function () use ($id) {
             return $this->userRepository->findById($id);
         });
@@ -133,11 +133,11 @@ class UserService implements UserServiceInterface
         }
 
         $result = $this->userRepository->update($user, $data);
-        
+
         // Invalidate caches
         CacheHelper::forget(CacheKey::userDetail($id));
         $this->invalidateUserListCache();
-        
+
         return $result;
     }
 
@@ -156,11 +156,11 @@ class UserService implements UserServiceInterface
         }
 
         $result = $this->userRepository->delete($id);
-        
+
         // Invalidate caches
         CacheHelper::forget(CacheKey::userDetail($id));
         $this->invalidateUserListCache();
-        
+
         return $result;
     }
 
@@ -178,10 +178,10 @@ class UserService implements UserServiceInterface
     public function restoreUser($id)
     {
         $result = $this->userRepository->restore($id);
-        
+
         // Invalidate list cache
         $this->invalidateUserListCache();
-        
+
         return $result;
     }
 
@@ -191,19 +191,19 @@ class UserService implements UserServiceInterface
     public function forceDeleteUser($id)
     {
         $result = $this->userRepository->forceDelete($id);
-        
+
         // Invalidate caches
         CacheHelper::forget(CacheKey::userDetail($id));
         $this->invalidateUserListCache();
-        
+
         return $result;
     }
-    
+
     /**
      * Invalidate all user list caches
      */
     private function invalidateUserListCache()
     {
-        CacheHelper::flushTags(['users:list']);
+        CacheHelper::flushTags([CacheConstants::TAG_USER_LIST]);
     }
 }

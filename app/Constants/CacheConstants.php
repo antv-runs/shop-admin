@@ -14,4 +14,5 @@ class CacheConstants
 
     public const TAG_PRODUCT_LIST = 'products:list';
     public const TAG_CATEGORY_LIST = 'categories:list';
+    public const TAG_USER_LIST = 'users:list';
 }
