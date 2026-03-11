@@ -68,7 +68,6 @@ Services will start:
 Run these commands only for the first time setup: generate key - Run migrations - Run seeder - Cache config
 
 ```bash
-docker exec -it shop-admin-api-prod php artisan key:generate
 docker exec -it shop-admin-api-prod php artisan migrate --force
 docker exec -it shop-admin-api-prod php artisan db:seed
 docker exec -it shop-admin-api-prod php artisan config:cache
