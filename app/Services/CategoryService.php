@@ -6,6 +6,7 @@ use App\Contracts\CategoryServiceInterface;
 use App\Contracts\Repositories\CategoryRepositoryInterface;
 use App\DTOs\CreateCategoryDTO;
 use App\DTOs\UpdateCategoryDTO;
+use App\DTOs\CategoryFilterDTO;
 use App\Models\Category;
 use App\Helpers\CacheHelper;
 use App\Constants\CacheKey;
@@ -26,15 +27,21 @@ class CategoryService implements CategoryServiceInterface
      * Get all categories
      * Cached with TTL of 300 seconds
      */
-    public function getAllCategories(\Illuminate\Http\Request $request, $perPage = 15)
+    public function getAllCategories(CategoryFilterDTO $filter)
     {
-        $search = (string) $request->input('search');
-        $page = (int) $request->input('page', 1);
+        $cacheKey = CacheKey::categoryList(
+            $filter->page,
+            $filter->perPage,
+            $filter->search ?? '',
+            (string) ($filter->status ?? 'active')
+        );
 
-        $cacheKey = CacheKey::categoryList($page, $perPage, $search);
-
-        return CacheHelper::rememberWithTags([CacheConstants::TAG_CATEGORY_LIST], $cacheKey, CacheConstants::CACHE_TTL, function () use ($request, $perPage) {
-            return $this->categoryRepository->getAll($request, $perPage);
+        return CacheHelper::rememberWithTags(
+            [CacheConstants::TAG_CATEGORY_LIST],
+            $cacheKey,
+            CacheConstants::CACHE_TTL,
+            function () use ($filter) {
+                return $this->categoryRepository->getAll($filter);
         });
     }
 

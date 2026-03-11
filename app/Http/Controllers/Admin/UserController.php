@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UserIndexRequest;
 use App\Http\Requests\UserRequest;
 use App\Models\User;
 use App\Contracts\UserServiceInterface;
 use App\DTOs\CreateUserDTO;
+use App\DTOs\UserFilterDTO;
 use App\DTOs\UpdateUserDTO;
 use App\Exceptions\BusinessException;
 use Illuminate\Http\Request;
@@ -20,9 +22,10 @@ class UserController extends Controller
         $this->userService = $userService;
     }
 
-    public function index(Request $request)
+    public function index(UserIndexRequest $request)
     {
-        $data = $this->userService->getListData($request);
+        $filter = UserFilterDTO::fromRequest($request);
+        $data = $this->userService->getListData($filter);
         $roles = $this->userService->getRoles();
 
         // Return JSON if requested (API compatibility)
@@ -113,9 +116,10 @@ class UserController extends Controller
     /**
      * Show trashed users
      */
-    public function trashed(Request $request)
+    public function trashed(UserIndexRequest $request)
     {
-        $data = $this->userService->getTrashed($request);
+        $filter = UserFilterDTO::fromRequest($request);
+        $data = $this->userService->getTrashed($filter);
         $roles = $this->userService->getRoles();
 
         if ($request->wantsJson()) {

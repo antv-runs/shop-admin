@@ -6,13 +6,14 @@ use App\Models\Product;
 use App\DTOs\CreateProductDTO;
 use App\DTOs\UpdateProductDTO;
 use App\DTOs\UploadImageDTO;
+use App\DTOs\ProductFilterDTO;
 
 interface ProductServiceInterface
 {
     /**
      * Get all products with category
      */
-    public function getAllProducts(\Illuminate\Http\Request $request, $perPage = 10);
+    public function getAllProducts(ProductFilterDTO $filter);
 
     /**
      * Get all categories

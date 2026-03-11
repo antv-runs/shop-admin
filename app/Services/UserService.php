@@ -6,12 +6,12 @@ use App\Contracts\UserServiceInterface;
 use App\Contracts\Repositories\UserRepositoryInterface;
 use App\DTOs\CreateUserDTO;
 use App\DTOs\UpdateUserDTO;
+use App\DTOs\UserFilterDTO;
 use App\Enums\UserRole;
 use App\Enums\ItemStatus;
 use App\Helpers\CacheHelper;
 use App\Constants\CacheKey;
 use App\Constants\CacheConstants;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Exceptions\BusinessException;
@@ -26,31 +26,23 @@ class UserService implements UserServiceInterface
     }
 
     /**
-     * Build query with search and filters
-     */
-    public function buildQuery(Request $request)
-    {
-        return $this->userRepository->buildQuery($request);
-    }
-
-    /**
      * Get paginated users data with metadata
      * Cached with TTL of 300 seconds
      */
-    public function getListData(Request $request)
+    public function getListData(UserFilterDTO $filter)
     {
-        $perPage = (int)$request->input('per_page', 15);
-        $search = (string) $request->input('search', '');
-        $status = (string) $request->input('status', ItemStatus::ACTIVE->value);
-        $role = (string) $request->input('role', '');
-        $sortBy = (string) $request->input('sort_by', 'id');
-        $sortOrder = (string) $request->input('sort_order', 'desc');
-        $page = (int) $request->input('page', 1);
+        $cacheKey = CacheKey::userList(
+            $filter->page,
+            $filter->perPage,
+            $filter->search ?? '',
+            ItemStatus::ACTIVE->value,
+            '',
+            'id',
+            'desc'
+        );
 
-        $cacheKey = CacheKey::userList($page, $perPage, $search, $status, $role, $sortBy, $sortOrder);
-
-        return CacheHelper::rememberWithTags([CacheConstants::TAG_USER_LIST], $cacheKey, CacheConstants::CACHE_TTL, function () use ($request, $perPage) {
-            $users = $this->userRepository->getAll($request, $perPage);
+        return CacheHelper::rememberWithTags([CacheConstants::TAG_USER_LIST], $cacheKey, CacheConstants::CACHE_TTL, function () use ($filter) {
+            $users = $this->userRepository->getAll($filter);
 
             return [
                 'data' => $users->items(),
@@ -63,11 +55,11 @@ class UserService implements UserServiceInterface
                     'to' => $users->lastItem(),
                 ],
                 'filters' => [
-                    'search' => $request->input('search'),
-                    'status' => $request->input('status', ItemStatus::ACTIVE->value),
-                    'role' => $request->input('role'),
-                    'sort_by' => $request->input('sort_by', 'id'),
-                    'sort_order' => $request->input('sort_order', 'desc'),
+                    'search' => $filter->search,
+                    'status' => ItemStatus::ACTIVE->value,
+                    'role' => null,
+                    'sort_by' => 'id',
+                    'sort_order' => 'desc',
                 ],
                 'paginator' => $users
             ];
@@ -167,9 +159,9 @@ class UserService implements UserServiceInterface
     /**
      * Get trashed users
      */
-    public function getTrashed(\Illuminate\Http\Request $request)
+    public function getTrashed(UserFilterDTO $filter)
     {
-        return $this->userRepository->getTrashed($request);
+        return $this->userRepository->getTrashed($filter);
     }
 
     /**

@@ -2,6 +2,8 @@
 
 namespace App\Contracts\Repositories;
 
+use App\DTOs\CategoryFilterDTO;
+
 interface CategoryRepositoryInterface
 {
     /**
@@ -12,8 +14,8 @@ interface CategoryRepositoryInterface
     /**
      * Get all categories with optional filters
      */
-    public function getAll($request, $perPage = 15);
 
+    public function getAll(CategoryFilterDTO $filter);
     /**
      * Create a new category
      */

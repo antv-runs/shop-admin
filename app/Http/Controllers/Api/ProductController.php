@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\ProductApiRequest;
+use App\Http\Requests\ProductIndexRequest;
 use App\Http\Requests\ExportProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Contracts\FileUploadServiceInterface;
 use App\Contracts\ProductServiceInterface;
 use App\DTOs\CreateProductDTO;
 use App\DTOs\UpdateProductDTO;
+use App\DTOs\ProductFilterDTO;
 use App\DTOs\UploadImageDTO;
 use App\Http\Requests\UploadImageRequest;
 use Illuminate\Http\Request;
@@ -49,10 +51,11 @@ class ProductController extends BaseController
      *     )
      * )
      */
-    public function index(Request $request)
+    public function index(ProductIndexRequest $request)
     {
-        $perPage = $request->get('per_page', 15);
-        $products = $this->productService->getAllProducts($request, $perPage);
+        $filter = ProductFilterDTO::fromRequest($request);
+        $products = $this->productService->getAllProducts($filter);
+
         return $this->success(
             ProductResource::collection($products),
             'Products retrieved successfully'

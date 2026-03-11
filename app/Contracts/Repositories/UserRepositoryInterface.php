@@ -2,6 +2,8 @@
 
 namespace App\Contracts\Repositories;
 
+use App\DTOs\UserFilterDTO;
+
 interface UserRepositoryInterface
 {
     /**
@@ -12,7 +14,7 @@ interface UserRepositoryInterface
     /**
      * Get all users with optional filters
      */
-    public function getAll($request, $perPage = 15);
+    public function getAll(UserFilterDTO $filter);
 
     /**
      * Create a new user
@@ -32,7 +34,7 @@ interface UserRepositoryInterface
     /**
      * Get trashed users
      */
-    public function getTrashed($request, $perPage = 15);
+    public function getTrashed(UserFilterDTO $filter);
 
     /**
      * Restore a user
@@ -43,11 +45,6 @@ interface UserRepositoryInterface
      * Force delete a user
      */
     public function forceDelete($id);
-
-    /**
-     * Build query with search and filters
-     */
-    public function buildQuery($request);
 
     /**
      * Paginate users

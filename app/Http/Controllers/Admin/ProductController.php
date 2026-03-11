@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
+use App\Http\Requests\ProductIndexRequest;
 use App\Models\Product;
 use App\Contracts\ProductServiceInterface;
 use App\Contracts\FileUploadServiceInterface;
 use App\DTOs\CreateProductDTO;
 use App\DTOs\UpdateProductDTO;
+use App\DTOs\ProductFilterDTO;
 use App\Exceptions\BusinessException;
 use Illuminate\Http\Request;
 
@@ -23,10 +25,10 @@ class ProductController extends Controller
         $this->fileUploadService = $fileUploadService;
     }
 
-    public function index(Request $request)
+    public function index(ProductIndexRequest $request)
     {
-        $perPage = 10;
-        $products = $this->productService->getAllProducts($request, $perPage);
+        $filter = ProductFilterDTO::fromRequest($request);
+        $products = $this->productService->getAllProducts($filter);
         $categories = $this->productService->getCategories();
 
         return view('admin.products.index', compact('products', 'categories'));

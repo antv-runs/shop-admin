@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\CategoryApiRequest;
+use App\Http\Requests\CategoryIndexRequest;
 use App\Http\Resources\CategoryResource;
 use App\Services\CategoryService;
 use App\DTOs\CreateCategoryDTO;
 use App\DTOs\UpdateCategoryDTO;
+use App\DTOs\CategoryFilterDTO;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -41,10 +43,10 @@ class CategoryController extends BaseController
      *     )
      * )
      */
-    public function index(Request $request)
+    public function index(CategoryIndexRequest $request)
     {
-        $perPage = $request->get('per_page', 15);
-        $categories = $this->categoryService->getAllCategories($request, $perPage);
+        $filter = CategoryFilterDTO::fromRequest($request);
+        $categories = $this->categoryService->getAllCategories($filter);
         return $this->success(
             CategoryResource::collection($categories),
             'Categories retrieved successfully'
@@ -84,10 +86,10 @@ class CategoryController extends BaseController
     public function store(CategoryApiRequest $request)
     {
         $validated = $request->validated();
-        
+
         // Create DTO from validated data
         $dto = CreateCategoryDTO::fromArray($validated);
-        
+
         $category = $this->categoryService->createCategory($dto);
 
         return $this->success(
@@ -163,10 +165,10 @@ class CategoryController extends BaseController
     {
         $category = $this->categoryService->getCategory($id);
         $validated = $request->validated();
-        
+
         // Create DTO from validated data
         $dto = UpdateCategoryDTO::fromArray($validated);
-        
+
         $result = $this->categoryService->updateCategory($category, $dto);
 
         return $this->success(

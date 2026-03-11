@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * Product form request validation
- * 
+ *
  * Single Responsibility: validates product data only
  * Improves maintainability and follows SOLID principles
  */
@@ -25,7 +25,7 @@ class ProductRequest extends FormRequest
                 'price' => 'required|numeric|min:0',
                 'description' => 'nullable|string',
                 'category_id' => 'nullable|exists:categories,id',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             ];
         }
 
@@ -35,7 +35,16 @@ class ProductRequest extends FormRequest
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'category_id' => 'nullable|exists:categories,id',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'image.image' => 'The image must be a valid image file.',
+            'image.mimes' => 'The image must be a file of type: jpeg, png, jpg, webp.',
+            'image.max' => 'The image may not be greater than 2MB.',
         ];
     }
 }

@@ -35,6 +35,6 @@
                 <p class="text-xs text-gray-500 truncate">{{ auth()->user()->email }}</p>
             </div>
         </div>
-        <a href="{{ route('admin.profile.show') }}" class="block w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">View Profile</a>
+        <!-- <a href="{{ route('admin.profile.show') }}" class="block w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">View Profile</a> -->
     </div>
 </aside>

@@ -3,8 +3,8 @@
 namespace App\Repositories;
 
 use App\Contracts\Repositories\UserRepositoryInterface;
+use App\DTOs\UserFilterDTO;
 use App\Models\User;
-use App\Enums\ItemStatus;
 
 class UserRepository implements UserRepositoryInterface
 {
@@ -19,10 +19,9 @@ class UserRepository implements UserRepositoryInterface
     /**
      * Get all users with optional filters
      */
-    public function getAll($request, $perPage = 15)
+    public function getAll(UserFilterDTO $filter)
     {
-        $perPage = (int)$request->input('per_page', $perPage);
-        $users = $this->buildQuery($request)->paginate($perPage);
+        $users = $this->buildQuery($filter)->paginate($filter->perPage, ['*'], 'page', $filter->page);
 
         return $users;
     }
@@ -57,21 +56,20 @@ class UserRepository implements UserRepositoryInterface
     /**
      * Get trashed users
      */
-    public function getTrashed($request, $perPage = 15)
+    public function getTrashed(UserFilterDTO $filter)
     {
-        $perPage = (int)$request->input('per_page', $perPage);
         $query = User::onlyTrashed();
 
         // Search by name or email
-        if ($request->filled('search')) {
-            $search = $request->input('search');
+        if (!empty($filter->search)) {
+            $search = $filter->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
-        $users = $query->latest('deleted_at')->paginate($perPage);
+        $users = $query->latest('deleted_at')->paginate($filter->perPage, ['*'], 'page', $filter->page);
 
         return [
             'data' => $users->items(),
@@ -112,42 +110,22 @@ class UserRepository implements UserRepositoryInterface
     }
 
     /**
-     * Build query with search and filters
+     * Build query with search filter
      */
-    public function buildQuery($request)
+    private function buildQuery(UserFilterDTO $filter)
     {
-        $status = $request->input('status', ItemStatus::ACTIVE->value);
-
-        // Query builder based on status
-        if ($status === ItemStatus::DELETED->value) {
-            $query = User::onlyTrashed();
-        } elseif ($status === ItemStatus::ALL->value) {
-            $query = User::withTrashed();
-        } else {
-            $query = User::query();
-        }
+        $query = User::query();
 
         // Search by name or email
-        if ($request->filled('search')) {
-            $search = $request->input('search');
+        if (!empty($filter->search)) {
+            $search = $filter->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
-        // Filter by role
-        if ($request->filled('role') && $status !== ItemStatus::DELETED->value) {
-            $query->where('role', $request->input('role'));
-        }
-
-        // Sort
-        $sortBy = $request->input('sort_by', 'id');
-        $sortOrder = $request->input('sort_order', 'desc');
-
-        if (in_array($sortBy, ['id', 'name', 'email', 'role', 'created_at', 'deleted_at'])) {
-            $query->orderBy($sortBy, $sortOrder);
-        }
+        $query->orderBy('id', 'desc');
 
         return $query;
     }

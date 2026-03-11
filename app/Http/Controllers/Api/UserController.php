@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Requests\UserIndexRequest;
 use App\Http\Requests\UserRequest;
 use App\Contracts\UserServiceInterface;
 use App\Http\Resources\UserResource;
 use App\DTOs\CreateUserDTO;
+use App\DTOs\UserFilterDTO;
 use App\DTOs\UpdateUserDTO;
-use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class UserController extends BaseController
@@ -43,9 +44,11 @@ class UserController extends BaseController
      *     @OA\Response(response=403, description="Admin access required")
      * )
      */
-    public function index(Request $request)
+    public function index(UserIndexRequest $request)
     {
-        $data = $this->userService->getListData($request);
+        $filter = UserFilterDTO::fromRequest($request);
+        $data = $this->userService->getListData($filter);
+
         return $this->success($data, 'User list retrieved successfully');
     }
 
@@ -84,10 +87,10 @@ class UserController extends BaseController
     public function store(UserRequest $request)
     {
         $validated = $request->validated();
-        
+
         // Create DTO from validated data
         $dto = CreateUserDTO::fromArray($validated);
-        
+
         $user = $this->userService->createUser($dto);
 
         return $this->success(new UserResource($user), 'User created successfully', Response::HTTP_CREATED);
@@ -158,10 +161,10 @@ class UserController extends BaseController
     public function update(UserRequest $request, $id)
     {
         $validated = $request->validated();
-        
+
         // Create DTO from validated data
         $dto = UpdateUserDTO::fromArray($validated);
-        
+
         $user = $this->userService->updateUser($id, $dto);
         return $this->success(new UserResource($user), 'User updated successfully');
     }
@@ -213,9 +216,11 @@ class UserController extends BaseController
      *     @OA\Response(response=403, description="Admin access required")
      * )
      */
-    public function trashed(Request $request)
+    public function trashed(UserIndexRequest $request)
     {
-        $data = $this->userService->getTrashed($request);
+        $filter = UserFilterDTO::fromRequest($request);
+        $data = $this->userService->getTrashed($filter);
+
         return $this->success($data, 'Trashed users retrieved successfully');
     }
 

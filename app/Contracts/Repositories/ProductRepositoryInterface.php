@@ -2,6 +2,8 @@
 
 namespace App\Contracts\Repositories;
 
+use App\DTOs\ProductFilterDTO;
+
 interface ProductRepositoryInterface
 {
     /**
@@ -12,7 +14,7 @@ interface ProductRepositoryInterface
     /**
      * Get all products with optional filters
      */
-    public function getAll($request, $perPage = 10);
+    public function getAll(ProductFilterDTO $filter);
 
     /**
      * Create a new product

@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Contracts\Repositories\CategoryRepositoryInterface;
 use App\Models\Category;
 use App\Enums\ItemStatus;
+use App\DTOs\CategoryFilterDTO;
 
 class CategoryRepository implements CategoryRepositoryInterface
 {
@@ -19,11 +20,9 @@ class CategoryRepository implements CategoryRepositoryInterface
     /**
      * Get all categories with optional filters
      */
-    public function getAll($request, $perPage = 15)
+    public function getAll(CategoryFilterDTO $filter)
     {
-        $perPage = (int)$request->input('per_page', $perPage);
-
-        $status = $request->input('status', ItemStatus::ACTIVE->value);
+        $status = $filter->status ?? ItemStatus::ACTIVE->value;
 
         if ($status === ItemStatus::DELETED->value) {
             $query = Category::onlyTrashed();
@@ -34,14 +33,13 @@ class CategoryRepository implements CategoryRepositoryInterface
         }
 
         // Search by name
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where('name', 'like', "%{$search}%");
+        if (!empty($filter->search)) {
+            $query->where('name', 'like', "%{$filter->search}%");
         }
 
-        // Sort
-        $sortBy = $request->input('sort_by', 'id');
-        $sortOrder = $request->input('sort_order', 'desc');
+        // Sort (using default sort)
+        $sortBy = 'id';
+        $sortOrder = 'desc';
 
         if (in_array($sortBy, ['id', 'name', 'created_at'])) {
             $query->orderBy($sortBy, $sortOrder);
@@ -49,7 +47,7 @@ class CategoryRepository implements CategoryRepositoryInterface
             $query->latest();
         }
 
-        return $query->paginate($perPage);
+        return $query->paginate($filter->perPage, ['*'], 'page', $filter->page);
     }
 
     /**

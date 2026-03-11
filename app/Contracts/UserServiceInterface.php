@@ -2,21 +2,16 @@
 
 namespace App\Contracts;
 
-use Illuminate\Http\Request;
 use App\DTOs\CreateUserDTO;
 use App\DTOs\UpdateUserDTO;
+use App\DTOs\UserFilterDTO;
 
 interface UserServiceInterface
 {
     /**
-     * Build query with search and filters
-     */
-    public function buildQuery(Request $request);
-
-    /**
      * Get paginated users data with metadata
      */
-    public function getListData(Request $request);
+    public function getListData(UserFilterDTO $filter);
 
     /**
      * Get role options
@@ -46,7 +41,7 @@ interface UserServiceInterface
     /**
      * Get trashed users
      */
-    public function getTrashed(Request $request);
+    public function getTrashed(UserFilterDTO $filter);
 
     /**
      * Restore user

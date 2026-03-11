@@ -5,13 +5,14 @@ namespace App\Contracts;
 use App\Models\Category;
 use App\DTOs\CreateCategoryDTO;
 use App\DTOs\UpdateCategoryDTO;
+use App\DTOs\CategoryFilterDTO;
 
 interface CategoryServiceInterface
 {
     /**
      * Get all categories
      */
-    public function getAllCategories(\Illuminate\Http\Request $request, $perPage = 15);
+    public function getAllCategories(CategoryFilterDTO $filter);
 
     /**
      * Get category by ID

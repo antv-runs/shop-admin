@@ -46,7 +46,7 @@
                     <img id="preview" src="{{ $product->image_url ?: '' }}" alt="Product Image" class="h-24 w-auto object-cover{{ $product->image ? '' : ' hidden' }}">
                 </div>
                 <input type="file" name="image" id="image" accept="image/*" class="mt-1 block w-full">
-                @error('image') <p class="text-red-600">{{ $message }}</p> @enderror
+                @error('image') <div class="text-danger text-red-600">{{ $message }}</div> @enderror
             </div>
 
             <div class="flex items-center gap-3">

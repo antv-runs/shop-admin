@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CategoryRequest;
+use App\Http\Requests\CategoryIndexRequest;
 use App\Contracts\CategoryServiceInterface;
 use App\DTOs\CreateCategoryDTO;
 use App\DTOs\UpdateCategoryDTO;
+use App\DTOs\CategoryFilterDTO;
 
 class CategoryController extends Controller
 {
@@ -17,10 +19,10 @@ class CategoryController extends Controller
         $this->categoryService = $categoryService;
     }
 
-    public function index(\Illuminate\Http\Request $request)
+    public function index(CategoryIndexRequest $request)
     {
-        $perPage = 15;
-        $categories = $this->categoryService->getAllCategories($request, $perPage);
+        $filter = CategoryFilterDTO::fromRequest($request);
+        $categories = $this->categoryService->getAllCategories($filter);
         return view('admin.categories.index', compact('categories'));
     }
 

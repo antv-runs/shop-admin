@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Contracts\Repositories\ProductRepositoryInterface;
 use App\Models\Product;
 use App\Enums\ItemStatus;
+use App\DTOs\ProductFilterDTO;
 
 class ProductRepository implements ProductRepositoryInterface
 {
@@ -19,12 +20,9 @@ class ProductRepository implements ProductRepositoryInterface
     /**
      * Get all products with optional filters
      */
-    public function getAll($request, $perPage = 10)
+    public function getAll(ProductFilterDTO $filter)
     {
-        $perPage = (int)$request->input('per_page', $perPage);
-
-        // Query builder based on status
-        $status = $request->input('status', ItemStatus::ACTIVE->value);
+        $status = $filter->status ?? ItemStatus::ACTIVE->value;
 
         if ($status === ItemStatus::DELETED->value) {
             $query = Product::onlyTrashed()->with('category');
@@ -35,19 +33,18 @@ class ProductRepository implements ProductRepositoryInterface
         }
 
         // Search by name
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where('name', 'like', "%{$search}%");
+        if (!empty($filter->search)) {
+            $query->where('name', 'like', "%{$filter->search}%");
         }
 
         // Filter by category
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->input('category_id'));
+        if ($filter->categoryId !== null) {
+            $query->where('category_id', $filter->categoryId);
         }
 
-        // Sort
-        $sortBy = $request->input('sort_by', 'id');
-        $sortOrder = $request->input('sort_order', 'desc');
+        // Sort (using default sort)
+        $sortBy = 'id';
+        $sortOrder = 'desc';
 
         if (in_array($sortBy, ['id', 'name', 'price', 'created_at'])) {
             $query->orderBy($sortBy, $sortOrder);
@@ -55,7 +52,7 @@ class ProductRepository implements ProductRepositoryInterface
             $query->latest();
         }
 
-        return $query->paginate($perPage);
+        return $query->paginate($filter->perPage, ['*'], 'page', $filter->page);
     }
 
     /**

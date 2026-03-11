@@ -21,15 +21,6 @@
                 <option value="{{ \App\Enums\ItemStatus::DELETED->value }}" {{ request('status') === \App\Enums\ItemStatus::DELETED->value ? 'selected' : '' }}>Deleted</option>
                 <option value="{{ \App\Enums\ItemStatus::ALL->value }}" {{ request('status') === \App\Enums\ItemStatus::ALL->value ? 'selected' : '' }}>All</option>
             </select>
-            <select name="sort_by" class="border rounded px-2 py-1 text-sm">
-                <option value="id" {{ request('sort_by') === 'id' ? 'selected' : '' }}>ID</option>
-                <option value="name" {{ request('sort_by') === 'name' ? 'selected' : '' }}>Name</option>
-                <option value="created_at" {{ request('sort_by') === 'created_at' ? 'selected' : '' }}>Created</option>
-            </select>
-            <select name="sort_order" class="border rounded px-2 py-1 text-sm">
-                <option value="desc" {{ request('sort_order') === 'desc' ? 'selected' : '' }}>Desc</option>
-                <option value="asc" {{ request('sort_order') === 'asc' ? 'selected' : '' }}>Asc</option>
-            </select>
             <select name="per_page" class="border rounded px-2 py-1 text-sm">
                 <option value="15" {{ request('per_page') == 15 ? 'selected' : '' }}>15</option>
                 <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>

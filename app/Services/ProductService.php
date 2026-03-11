@@ -10,6 +10,7 @@ use App\Jobs\ExportProductsJob;
 use App\Contracts\FileUploadServiceInterface;
 use App\DTOs\CreateProductDTO;
 use App\DTOs\UpdateProductDTO;
+use App\DTOs\ProductFilterDTO;
 use App\Helpers\CacheHelper;
 use App\Constants\CacheKey;
 use App\Constants\CacheConstants;
@@ -36,17 +37,24 @@ class ProductService implements ProductServiceInterface
      * Get all products with category
      * Cached with TTL of 300 seconds
      */
-    public function getAllProducts(\Illuminate\Http\Request $request, $perPage = 10)
+    public function getAllProducts(ProductFilterDTO $filter)
     {
-        $search = (string) $request->input('search', '');
-        $categoryId = (string) $request->input('category_id', '');
-        $page = (int) $request->input('page', 1);
+        $cacheKey = CacheKey::productList(
+            $filter->page,
+            $filter->perPage,
+            $filter->search ?? '',
+            (string) ($filter->categoryId ?? ''),
+            (string) ($filter->status ?? 'active')
+        );
 
-        $cacheKey = CacheKey::productList($page, $perPage, $search, $categoryId);
-
-        return CacheHelper::rememberWithTags([CacheConstants::TAG_PRODUCT_LIST], $cacheKey, CacheConstants::CACHE_TTL, function () use ($request, $perPage) {
-            return $this->productRepository->getAll($request, $perPage);
-        });
+        return CacheHelper::rememberWithTags(
+            [CacheConstants::TAG_PRODUCT_LIST],
+            $cacheKey,
+            CacheConstants::CACHE_TTL,
+            function () use ($filter) {
+                return $this->productRepository->getAll($filter);
+            }
+        );
     }
 
     /**

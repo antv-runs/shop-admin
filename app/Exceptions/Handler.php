@@ -9,6 +9,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Exceptions\PostTooLargeException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpFoundation\Response;
@@ -61,6 +62,22 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $e)
     {
+        if ($e instanceof PostTooLargeException) {
+            $message = 'The uploaded file is too large. Maximum allowed image size is 2MB.';
+
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return $this->error(
+                    'Validation error',
+                    Response::HTTP_UNPROCESSABLE_ENTITY,
+                    ['image' => [$message]]
+                );
+            }
+
+            return redirect()->back()
+                ->withInput($request->except('image'))
+                ->withErrors(['image' => $message]);
+        }
+
         // Force JSON for API routes
         if ($request->expectsJson() || $request->is('api/*')) {
 
