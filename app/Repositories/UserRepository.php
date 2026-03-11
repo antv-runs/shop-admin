@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Contracts\Repositories\UserRepositoryInterface;
 use App\DTOs\UserFilterDTO;
+use App\Enums\ItemStatus;
 use App\Models\User;
 
 class UserRepository implements UserRepositoryInterface
@@ -114,7 +115,15 @@ class UserRepository implements UserRepositoryInterface
      */
     private function buildQuery(UserFilterDTO $filter)
     {
-        $query = User::query();
+        $status = $filter->status ?? ItemStatus::ACTIVE->value;
+
+        if ($status === ItemStatus::DELETED->value) {
+            $query = User::onlyTrashed();
+        } elseif ($status === ItemStatus::ALL->value) {
+            $query = User::withTrashed();
+        } else {
+            $query = User::query();
+        }
 
         // Search by name or email
         if (!empty($filter->search)) {

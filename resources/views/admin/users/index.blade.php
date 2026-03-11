@@ -12,7 +12,7 @@
 
         <!-- Search & Filter Form -->
         <form method="GET" action="{{ route('admin.users.index') }}" class="mb-6 p-4 bg-gray-50 rounded">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div>
                     <label class="block text-sm font-medium mb-1">Search (Name / Email)</label>
                     <input type="text" name="search" placeholder="Search..."
@@ -30,28 +30,12 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Role</label>
-                    <select name="role" class="w-full border rounded px-3 py-2 text-sm" {{ ($filters['status'] ?? 'active') === 'deleted' ? 'disabled' : '' }}>
-                        <option value="">-- All Roles --</option>
-                        @foreach($roles as $value => $label)
-                            <option value="{{ $value }}" {{ ($filters['role'] ?? '') === $value ? 'selected' : '' }}>
-                                {{ $label }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-1">Sort By</label>
-                    <select name="sort_by" class="w-full border rounded px-3 py-2 text-sm">
-                        <option value="id" {{ ($filters['sort_by'] ?? 'id') === 'id' ? 'selected' : '' }}>ID</option>
-                        <option value="name" {{ ($filters['sort_by'] ?? 'id') === 'name' ? 'selected' : '' }}>Name</option>
-                        <option value="email" {{ ($filters['sort_by'] ?? 'id') === 'email' ? 'selected' : '' }}>Email</option>
-                        <option value="role" {{ ($filters['sort_by'] ?? 'id') === 'role' ? 'selected' : '' }}>Role</option>
-                        <option value="created_at" {{ ($filters['sort_by'] ?? 'id') === 'created_at' ? 'selected' : '' }}>Date Created</option>
-                        @if(($filters['status'] ?? \App\Enums\ItemStatus::ACTIVE->value) === \App\Enums\ItemStatus::DELETED->value)
-                            <option value="deleted_at" {{ ($filters['sort_by'] ?? 'id') === 'deleted_at' ? 'selected' : '' }}>Deleted Date</option>
-                        @endif
+                    <label class="block text-sm font-medium mb-1">Per Page</label>
+                    <select name="per_page" class="w-full border rounded px-3 py-2 text-sm">
+                        <option value="10" {{ (int) ($filters['per_page'] ?? 15) === 10 ? 'selected' : '' }}>10</option>
+                        <option value="15" {{ (int) ($filters['per_page'] ?? 15) === 15 ? 'selected' : '' }}>15</option>
+                        <option value="25" {{ (int) ($filters['per_page'] ?? 15) === 25 ? 'selected' : '' }}>25</option>
+                        <option value="50" {{ (int) ($filters['per_page'] ?? 15) === 50 ? 'selected' : '' }}>50</option>
                     </select>
                 </div>
 

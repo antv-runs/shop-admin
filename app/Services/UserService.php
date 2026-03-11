@@ -31,17 +31,19 @@ class UserService implements UserServiceInterface
      */
     public function getListData(UserFilterDTO $filter)
     {
+        $status = $filter->status ?? ItemStatus::ACTIVE->value;
+
         $cacheKey = CacheKey::userList(
             $filter->page,
             $filter->perPage,
             $filter->search ?? '',
-            ItemStatus::ACTIVE->value,
+            $status,
             '',
             'id',
             'desc'
         );
 
-        return CacheHelper::rememberWithTags([CacheConstants::TAG_USER_LIST], $cacheKey, CacheConstants::CACHE_TTL, function () use ($filter) {
+        return CacheHelper::rememberWithTags([CacheConstants::TAG_USER_LIST], $cacheKey, CacheConstants::CACHE_TTL, function () use ($filter, $status) {
             $users = $this->userRepository->getAll($filter);
 
             return [
@@ -56,10 +58,8 @@ class UserService implements UserServiceInterface
                 ],
                 'filters' => [
                     'search' => $filter->search,
-                    'status' => ItemStatus::ACTIVE->value,
-                    'role' => null,
-                    'sort_by' => 'id',
-                    'sort_order' => 'desc',
+                    'status' => $status,
+                    'per_page' => $filter->perPage,
                 ],
                 'paginator' => $users
             ];

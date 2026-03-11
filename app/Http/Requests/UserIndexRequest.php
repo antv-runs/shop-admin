@@ -18,6 +18,7 @@ class UserIndexRequest extends FormRequest
     {
         return [
             'search' => 'nullable|string',
+            'status' => 'nullable|string|in:active,deleted,all,trashed',
             'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:1|max:100',
         ];
