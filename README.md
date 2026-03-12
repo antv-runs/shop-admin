@@ -65,7 +65,7 @@ Services will start:
 
 ## Initialize Application
 
-Run these commands only for the first time setup: generate key - Run migrations - Run seeder - Cache config
+For first-time local development setup only, run the commands below after the MySQL service defined in `docker-compose.yml` is up and running.
 
 ```bash
 docker exec -it shop-admin-api-prod php artisan migrate --force
