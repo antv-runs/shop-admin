@@ -16,6 +16,7 @@ use App\Http\Requests\UploadImageRequest;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ProductController extends BaseController
 {
@@ -72,9 +73,9 @@ class ProductController extends BaseController
      * @OA\Post(
      *     path="/api/products",
      *     summary="Create new product",
-     *     description="Create a new product (Admin only). Validation: name required max:255, price required numeric min:0, category_id nullable exists:categories",
+    *     description="Create a new product (Admin only). Validation: name required max:255, price required numeric min:0, category_id nullable exists:categories,id",
      *     tags={"Products"},
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth":{}}},p
      *     @OA\RequestBody(
      *         required=true,
      *         description="Product data per ProductRequest validation",
@@ -221,11 +222,78 @@ class ProductController extends BaseController
     }
 
     /**
+     * Storefront endpoint: product detail by id.
+     *
+     * @OA\Get(
+     *     path="/api/products/{id}",
+     *     summary="Get product detail",
+     *     tags={"Products"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Product ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Product detail",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Product retrieved successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer"),
+     *                 @OA\Property(property="name", type="string"),
+     *                 @OA\Property(
+     *                     property="pricing",
+     *                     type="object",
+     *                     @OA\Property(property="currency", type="string"),
+     *                     @OA\Property(property="current", type="number"),
+     *                     @OA\Property(property="original", type="number"),
+     *                     @OA\Property(property="discountPercent", type="integer", nullable=true)
+     *                 ),
+     *                 @OA\Property(property="thumbnail", type="string", nullable=true),
+     *                 @OA\Property(
+     *                     property="images",
+     *                     type="array",
+     *                     @OA\Items(type="object")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Product not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Product not found")
+     *         )
+     *     )
+     * )
+     */
+    public function show($id)
+    {
+        try {
+            $product = $this->productService->getProduct($id);
+
+            return $this->success(
+                new ProductResource($product),
+                'Product retrieved successfully'
+            );
+        } catch (ModelNotFoundException $exception) {
+            return response()->json([
+                'message' => 'Product not found',
+            ], Response::HTTP_NOT_FOUND);
+        }
+    }
+
+    /**
      * Storefront endpoint: product detail by slug.
      *
      * @OA\Get(
-     *     path="/api/products/{slug}",
-     *     summary="Get storefront product detail",
+     *     path="/api/products/slug/{slug}",
+     *     summary="Get storefront product detail by slug",
      *     description="Retrieve storefront product detail by slug",
      *     tags={"Products"},
      *     @OA\Parameter(name="slug", in="path", required=true, description="Product slug", @OA\Schema(type="string")),
@@ -241,7 +309,7 @@ class ProductController extends BaseController
      *     @OA\Response(response=404, description="Product not found")
      * )
      */
-    public function show(string $slug)
+    public function showBySlug(string $slug)
     {
         $product = $this->productService->findProductBySlugForStore($slug);
 

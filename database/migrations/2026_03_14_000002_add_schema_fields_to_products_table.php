@@ -17,12 +17,8 @@ return new class extends Migration
                 $table->text('details')->nullable()->after('description');
             }
 
-            if (!Schema::hasColumn('products', 'original_price')) {
-                $table->decimal('original_price', 10, 2)->nullable()->after('price');
-            }
-
             if (!Schema::hasColumn('products', 'currency')) {
-                $table->char('currency', 3)->default('USD')->after('original_price');
+                $table->char('currency', 3)->default('USD')->after('compare_price');
             }
 
             if (!Schema::hasColumn('products', 'rating_avg')) {
@@ -52,10 +48,6 @@ return new class extends Migration
 
             if (Schema::hasColumn('products', 'currency')) {
                 $table->dropColumn('currency');
-            }
-
-            if (Schema::hasColumn('products', 'original_price')) {
-                $table->dropColumn('original_price');
             }
 
             if (Schema::hasColumn('products', 'details')) {

@@ -3,6 +3,8 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\ProductImageResource;
+use Illuminate\Support\Facades\Storage;
 
 class ProductResource extends JsonResource
 {
@@ -12,6 +14,11 @@ class ProductResource extends JsonResource
         $originalPrice = $this->compare_price !== null
             ? (float) $this->compare_price
             : $currentPrice;
+        $fallbackImage = $this->relationLoaded('images') ? $this->images->first() : null;
+        $thumbnailPath = optional($this->primaryImage)->image_url ?: optional($fallbackImage)->image_url;
+        $thumbnailUrl = $thumbnailPath
+            ? Storage::url($thumbnailPath)
+            : null;
 
         $discountPercent = null;
         if ($originalPrice > $currentPrice && $originalPrice > 0) {
@@ -22,13 +29,14 @@ class ProductResource extends JsonResource
             'id' => (string) $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
+            'description' => $this->description,
             'pricing' => [
                 'currency' => $this->currency ?? 'USD',
                 'current' => $currentPrice,
                 'original' => $originalPrice,
                 'discountPercent' => $discountPercent,
             ],
-            'thumbnail' => optional($this->primaryImage)->image_url,
+            'thumbnail' => $thumbnailUrl,
             'images' => ProductImageResource::collection($this->whenLoaded('images')),
             'category' => $this->whenLoaded('category', function () {
                 return [

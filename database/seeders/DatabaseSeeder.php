@@ -125,56 +125,49 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'One Life Graphic T-shirt',
                 'price' => 260,
-                'image' => 'pic_t-shirt-main-1.png',
+                'compare_price' => 300,
                 'description' => 'Graphic cotton t-shirt inspired by the featured product detail page.',
                 'category_slugs' => ['t-shirts', 'casual', 'shop'],
             ],
             [
                 'name' => 'Polo with Contrast Trims',
                 'price' => 212,
-                'image' => 'pic_polo_blue.png',
                 'description' => 'Classic polo with contrast details from the cart and product list UI.',
                 'category_slugs' => ['polo-shirts', 'casual', 'shop'],
             ],
             [
                 'name' => 'Gradient Graphic T-shirt',
                 'price' => 145,
-                'image' => 'pic_t_shirt.png',
                 'description' => 'Gradient print t-shirt highlighted in catalog and cart views.',
                 'category_slugs' => ['t-shirts', 'casual', 'shop'],
             ],
             [
                 'name' => 'Polo with Tipping Details',
                 'price' => 180,
-                'image' => 'pic_polo_tipping.png',
                 'description' => 'Minimal tipping-detail polo showcased in the catalog grid.',
                 'category_slugs' => ['polo-shirts', 'casual', 'shop'],
             ],
             [
                 'name' => 'Black Striped T-shirt',
                 'price' => 120,
-                'image' => 'pic_t_shirt_black.png',
                 'description' => 'Black striped tee featured across catalog and cart with promo price.',
                 'category_slugs' => ['t-shirts', 'casual', 'on-sale'],
             ],
             [
                 'name' => 'Skinny Fit Jeans',
                 'price' => 240,
-                'image' => 'product4.png',
                 'description' => 'Slim-cut denim jeans displayed in the product list section.',
                 'category_slugs' => ['jeans', 'casual', 'shop'],
             ],
             [
                 'name' => 'Checkered Shirt',
                 'price' => 180,
-                'image' => 'product5.png',
                 'description' => 'Checkered shirt from the homepage catalog examples.',
                 'category_slugs' => ['shirts', 'casual', 'new-arrivals'],
             ],
             [
                 'name' => 'Sleeve Striped T-shirt',
                 'price' => 130,
-                'image' => 'product6.png',
                 'description' => 'Sleeve-striped t-shirt featured in the UI product tiles.',
                 'category_slugs' => ['t-shirts', 'casual', 'shop'],
             ],
@@ -186,9 +179,9 @@ class DatabaseSeeder extends Seeder
                 [
                     'name' => $product['name'],
                     'price' => $product['price'],
+                    'compare_price' => $product['compare_price'] ?? null,
                     'description' => $product['description'],
                     'category_id' => $resolveCategoryId($product['category_slugs']),
-                    'image' => $product['image'],
                 ]
             );
         }
@@ -250,16 +243,6 @@ class DatabaseSeeder extends Seeder
             'brands' => ['Signature Tee', 'Brand Polo', 'Brand Jeans'],
         ];
 
-        $placeholderImages = [
-            'default-product.jpg',
-            'product1.png',
-            'product2.png',
-            'product3.png',
-            'product4.png',
-            'product5.png',
-            'product6.png',
-        ];
-
         for ($i = 1; $i <= $remaining; $i++) {
             $category = $categories[($i - 1) % $categories->count()];
             $categorySlug = $category->slug;
@@ -279,7 +262,6 @@ class DatabaseSeeder extends Seeder
                     'price' => rand(80, 320),
                     'description' => "{$name} for {$category->name} looks, designed for daily comfort and versatile styling.",
                     'category_id' => $category->id,
-                    'image' => Arr::random($placeholderImages),
                 ]
             );
         }

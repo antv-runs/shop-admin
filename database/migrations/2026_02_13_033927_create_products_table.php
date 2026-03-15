@@ -17,6 +17,7 @@ class CreateProductsTable extends Migration
             $table->id();
             $table->string('name');
             $table->decimal('price', 10, 2);
+            $table->decimal('compare_price', 10, 2)->nullable();
             $table->text('description')->nullable();
 
             $table->timestamps();

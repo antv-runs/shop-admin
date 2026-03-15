@@ -14,11 +14,7 @@ class ProductRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
-        if (!$this->has('images') && $this->hasFile('image')) {
-            $this->merge([
-                'images' => [$this->file('image')],
-            ]);
-        }
+        // no-op
     }
 
     public function authorize()

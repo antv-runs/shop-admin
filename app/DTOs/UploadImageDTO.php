@@ -26,10 +26,6 @@ class UploadImageDTO
             $images = [$images];
         }
 
-        if (isset($data['image']) && empty($images)) {
-            $images = [$data['image']];
-        }
-
         return new self(
             $data['id'],
             $images

@@ -14,7 +14,9 @@ class ProductRepository implements ProductRepositoryInterface
      */
     public function findById($id)
     {
-        return Product::findOrFail($id);
+        return Product::query()
+            ->with(['images', 'primaryImage', 'category'])
+            ->findOrFail($id);
     }
 
     /**

@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -13,11 +11,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('products', function (Blueprint $table) {
-            if (!Schema::hasColumn('products', 'image')) {
-                $table->string('image')->nullable()->after('description');
-            }
-        });
+        // legacy migration kept for history; product images now live in product_images table
     }
 
     /**
@@ -27,10 +21,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('products', function (Blueprint $table) {
-            if (Schema::hasColumn('products', 'image')) {
-                $table->dropColumn('image');
-            }
-        });
+        // no-op
     }
 };

@@ -1098,7 +1098,7 @@
                     "Products"
                 ],
                 "summary": "Create new product",
-                "description": "Create a new product (Admin only). Validation: name required max:255, price required numeric min:0, category_id nullable exists:categories",
+                "description": "Create a new product (Admin only). Validation: name required max:255, price required numeric min:0, category_id nullable exists:categories,id",
                 "operationId": "785644b7d7dd38af4b51dafd0fbc1b6d",
                 "requestBody": {
                     "description": "Product data per ProductRequest validation",
@@ -1289,28 +1289,28 @@
                 ]
             }
         },
-        "/api/products/{slug}": {
+        "/api/products/{id}": {
             "get": {
                 "tags": [
                     "Products"
                 ],
-                "summary": "Get storefront product detail",
-                "description": "Retrieve storefront product detail by slug",
-                "operationId": "5bbb6d725346d38781b256ed5c715d62",
+                "summary": "Get product detail",
+                "description": "Storefront endpoint: product detail by id.",
+                "operationId": "c87fb2e4d617e7b36c712cad358acdb8",
                 "parameters": [
                     {
-                        "name": "slug",
+                        "name": "id",
                         "in": "path",
-                        "description": "Product slug",
+                        "description": "Product ID",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Product retrieved successfully",
+                        "description": "Product detail",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1324,7 +1324,43 @@
                                             "example": "Product retrieved successfully"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/Product"
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "pricing": {
+                                                    "properties": {
+                                                        "currency": {
+                                                            "type": "string"
+                                                        },
+                                                        "current": {
+                                                            "type": "number"
+                                                        },
+                                                        "original": {
+                                                            "type": "number"
+                                                        },
+                                                        "discountPercent": {
+                                                            "type": "integer",
+                                                            "nullable": true
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "thumbnail": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "images": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1333,12 +1369,23 @@
                         }
                     },
                     "404": {
-                        "description": "Product not found"
+                        "description": "Product not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
-            }
-        },
-        "/api/products/{id}": {
+            },
             "delete": {
                 "tags": [
                     "Products"
@@ -1484,6 +1531,55 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/products/slug/{slug}": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Get storefront product detail by slug",
+                "description": "Retrieve storefront product detail by slug",
+                "operationId": "5ff1bd41e6c7e2bb37a8db906391a4df",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "description": "Product slug",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product retrieved successfully"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Product"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found"
+                    }
+                }
             }
         },
         "/api/products/trashed": {

@@ -18,14 +18,6 @@ class UploadImageRequest extends FormRequest
         if ($images instanceof UploadedFile) {
             $this->files->set('images', [$images]);
         }
-
-        if (!$this->has('images') && $this->hasFile('image')) {
-            $image = $this->file('image');
-
-            if ($image instanceof UploadedFile) {
-                $this->files->set('images', [$image]);
-            }
-        }
     }
 
     public function authorize(): bool
