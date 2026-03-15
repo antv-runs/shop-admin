@@ -10,11 +10,11 @@ class CacheKey
 {
     /**
      * Cache key for paginated products list
-     * Format: products:list:{page}:{perPage}:{search}:{categoryId}:{status}
+     * Format: products:list:{filterHash}
      */
-    public static function productList(int $page, int $perPage, string $search, string $categoryId, string $status): string
+    public static function productList(string $filterHash): string
     {
-        return "products:list:{$page}:{$perPage}:{$search}:{$categoryId}:{$status}";
+        return "products:list:{$filterHash}";
     }
 
     /**
@@ -64,11 +64,11 @@ class CacheKey
 
     /**
      * Cache key for categories list
-     * Format: categories:list:{page}:{perPage}:{search}:{status}
+     * Format: categories:list:{filterHash}
      */
-    public static function categoryList(int $page, int $perPage, string $search, string $status): string
+    public static function categoryList(string $filterHash): string
     {
-        return "categories:list:{$page}:{$perPage}:{$search}:{$status}";
+        return "categories:list:{$filterHash}";
     }
 
     /**

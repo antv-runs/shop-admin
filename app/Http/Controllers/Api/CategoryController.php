@@ -7,8 +7,8 @@ use App\Http\Requests\CategoryIndexRequest;
 use App\Http\Resources\CategoryResource;
 use App\Services\CategoryService;
 use App\DTOs\CreateCategoryDTO;
-use App\DTOs\UpdateCategoryDTO;
 use App\DTOs\CategoryFilterDTO;
+use App\DTOs\UpdateCategoryDTO;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -22,22 +22,19 @@ class CategoryController extends BaseController
     }
 
     /**
-     * Get all categories with pagination and search
+     * Get storefront categories for navigation.
      *
      * @OA\Get(
      *     path="/api/categories",
-     *     summary="List all categories",
-     *     description="Get paginated list of categories with optional search",
+     *     summary="List storefront categories",
+     *     description="Get categories used by storefront navigation",
      *     tags={"Categories"},
-     *     @OA\Parameter(name="search", in="query", description="Search by category name", @OA\Schema(type="string")),
-     *     @OA\Parameter(name="page", in="query", description="Page number", @OA\Schema(type="integer", default=1)),
-     *     @OA\Parameter(name="per_page", in="query", description="Items per page", @OA\Schema(type="integer", default=15)),
      *     @OA\Response(
      *         response=200,
      *         description="Categories retrieved successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="message", type="string", example="Categories retrieved successfully"),
      *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Category"))
      *         )
      *     )
@@ -46,7 +43,8 @@ class CategoryController extends BaseController
     public function index(CategoryIndexRequest $request)
     {
         $filter = CategoryFilterDTO::fromRequest($request);
-        $categories = $this->categoryService->getAllCategories($filter);
+        $categories = $this->categoryService->getCategoriesForStore($filter);
+
         return $this->success(
             CategoryResource::collection($categories),
             'Categories retrieved successfully'
@@ -301,4 +299,5 @@ class CategoryController extends BaseController
             'Category permanently deleted'
         );
     }
+
 }

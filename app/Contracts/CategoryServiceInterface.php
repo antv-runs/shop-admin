@@ -48,4 +48,9 @@ interface CategoryServiceInterface
      * Force delete category
      */
     public function forceDeleteCategory($id);
+
+    /**
+     * Get categories for storefront navigation
+     */
+    public function getCategoriesForStore(CategoryFilterDTO $filter);
 }

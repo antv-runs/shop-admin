@@ -41,12 +41,18 @@
             </div>
 
             <div>
-                <label class="block font-medium">Image (one):</label>
+                <label class="block font-medium">Images:</label>
                 <div class="mb-2">
-                    <img id="preview" src="{{ $product->image_url ?: '' }}" alt="Product Image" class="h-24 w-auto object-cover{{ $product->image ? '' : ' hidden' }}">
+                    <img id="current-preview" src="{{ $product->image_url ?: '' }}" alt="Product Image" class="h-24 w-auto object-cover{{ $product->image ? '' : ' hidden' }}">
                 </div>
-                <input type="file" name="image" id="image" accept="image/*" class="mt-1 block w-full">
-                @error('image') <div class="text-danger text-red-600">{{ $message }}</div> @enderror
+                <div id="preview-list" class="mb-2 flex flex-wrap gap-2"></div>
+                <input type="file" name="images[]" id="images" accept="image/*" multiple class="mt-1 block w-full">
+                @error('images') <div class="text-danger text-red-600">{{ $message }}</div> @enderror
+                @foreach ($errors->get('images.*') as $messages)
+                    @foreach ($messages as $message)
+                        <div class="text-danger text-red-600">{{ $message }}</div>
+                    @endforeach
+                @endforeach
             </div>
 
             <div class="flex items-center gap-3">
@@ -57,20 +63,31 @@
     </div>
 
     <script>
-        document.getElementById('image').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            const preview = document.getElementById('preview');
-            if (!file) {
-                preview.classList.add('hidden');
-                preview.src = '';
+        document.getElementById('images').addEventListener('change', function(event) {
+            const previewList = document.getElementById('preview-list');
+            const currentPreview = document.getElementById('current-preview');
+
+            previewList.innerHTML = '';
+
+            const files = Array.from(event.target.files || []);
+
+            if (!files.length) {
                 return;
             }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
+
+            currentPreview.classList.add('hidden');
+
+            files.forEach(function(file) {
+                const reader = new window.FileReader();
+                reader.onload = function(e) {
+                    const image = document.createElement('img');
+                    image.src = e.target.result;
+                    image.alt = file.name;
+                    image.className = 'h-24 w-auto rounded object-cover';
+                    previewList.appendChild(image);
+                };
+                reader.readAsDataURL(file);
+            });
         });
     </script>
 @endsection

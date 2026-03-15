@@ -14,8 +14,8 @@ use App\DTOs\ProductFilterDTO;
 use App\Helpers\CacheHelper;
 use App\Constants\CacheKey;
 use App\Constants\CacheConstants;
-use App\Constants\CacheTag;
 use App\DTOs\UploadImageDTO;
+use Illuminate\Support\Facades\DB;
 
 class ProductService implements ProductServiceInterface
 {
@@ -39,13 +39,7 @@ class ProductService implements ProductServiceInterface
      */
     public function getAllProducts(ProductFilterDTO $filter)
     {
-        $cacheKey = CacheKey::productList(
-            $filter->page,
-            $filter->perPage,
-            $filter->search ?? '',
-            (string) ($filter->categoryId ?? ''),
-            (string) ($filter->status ?? 'active')
-        );
+        $cacheKey = CacheKey::productList($filter->toCacheKey());
 
         return CacheHelper::rememberWithTags(
             [CacheConstants::TAG_PRODUCT_LIST],
@@ -97,12 +91,6 @@ class ProductService implements ProductServiceInterface
     public function updateProduct(Product $product, UpdateProductDTO $dto)
     {
         $data = $dto->toArray();
-
-        // If a new image is provided, remove old image first
-        if (!empty($data['image']) && $product->image) {
-            // remove old image using upload service (which respects configured disk)
-            $this->fileUploadService->deleteFile($product->image);
-        }
 
         $result = $this->productRepository->update($product, $data);
 
@@ -190,22 +178,46 @@ class ProductService implements ProductServiceInterface
     }
 
     /**
-     * Upload a single product image and return a publicly accessible URL.
+     * Upload one or more product images and return product with loaded gallery.
      */
     public function uploadProductImage(UploadImageDTO $dto): Product
     {
-        $path = $this->fileUploadService->uploadProductImage($dto->image);
-
         $product = $this->productRepository->findById($dto->id);
 
-        $saved = $this->productRepository->update($product, [
-            'image' => $path
-        ]);
+        DB::transaction(function () use ($dto, $product) {
+            foreach ($dto->images as $index => $image) {
+                $path = $this->fileUploadService->uploadProductImage($image);
+
+                if ($index === 0) {
+                    $this->productRepository->update($product, [
+                        'image' => $path,
+                    ]);
+                }
+
+                $this->productRepository->createProductImage($product->id, $path);
+            }
+        });
 
         // Invalidate caches
         CacheHelper::forget(CacheKey::productDetail($dto->id));
         $this->invalidateProductListCache();
 
-        return $saved;
+        return $product->fresh()->load('images');
+    }
+
+    /**
+     * Find a storefront product by slug
+     */
+    public function findProductBySlugForStore(string $slug)
+    {
+        return $this->productRepository->findPublicBySlug($slug);
+    }
+
+    /**
+     * Get related product IDs for storefront product detail
+     */
+    public function getRelatedProductIdsForStore(int $productId, ?int $categoryId = null, int $limit = 4): array
+    {
+        return $this->productRepository->getRelatedPublicProductIds($productId, $categoryId, $limit);
     }
 }

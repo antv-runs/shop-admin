@@ -64,7 +64,9 @@ namespace App\Swagger;
  *     @OA\Property(property="price", type="number", format="float", example=99.99),
  *     @OA\Property(property="description", type="string"),
  *     @OA\Property(property="category", type="object", ref="#/components/schemas/Category"),
+ *     @OA\Property(property="image", type="string", nullable=true, example="products/product-main.jpg"),
  *     @OA\Property(property="image_url", type="string", nullable=true),
+ *     @OA\Property(property="images", type="array", @OA\Items(type="string", example="products/product-gallery-1.jpg")),
  *     @OA\Property(property="created_at", type="string", format="date-time")
  * )
  *

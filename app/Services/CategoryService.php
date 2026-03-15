@@ -11,7 +11,6 @@ use App\Models\Category;
 use App\Helpers\CacheHelper;
 use App\Constants\CacheKey;
 use App\Constants\CacheConstants;
-use App\Constants\CacheTag;
 use Illuminate\Support\Str;
 
 class CategoryService implements CategoryServiceInterface
@@ -29,12 +28,7 @@ class CategoryService implements CategoryServiceInterface
      */
     public function getAllCategories(CategoryFilterDTO $filter)
     {
-        $cacheKey = CacheKey::categoryList(
-            $filter->page,
-            $filter->perPage,
-            $filter->search ?? '',
-            (string) ($filter->status ?? 'active')
-        );
+        $cacheKey = CacheKey::categoryList($filter->toCacheKey());
 
         return CacheHelper::rememberWithTags(
             [CacheConstants::TAG_CATEGORY_LIST],
@@ -162,5 +156,13 @@ class CategoryService implements CategoryServiceInterface
     private function invalidateCategoryListCache()
     {
         CacheHelper::flushTags([CacheConstants::TAG_CATEGORY_LIST]);
+    }
+
+    /**
+     * Get categories for storefront navigation
+     */
+    public function getCategoriesForStore(CategoryFilterDTO $filter)
+    {
+        return $this->categoryRepository->getPublicCategories($filter);
     }
 }

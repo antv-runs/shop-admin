@@ -60,4 +60,9 @@ interface CategoryRepositoryInterface
      * Paginate categories
      */
     public function paginate($perPage = 15);
+
+    /**
+     * Get categories for storefront navigation
+     */
+    public function getPublicCategories(CategoryFilterDTO $filter);
 }

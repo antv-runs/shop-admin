@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Database\Seeder;
 use App\Models\User;
@@ -67,26 +68,26 @@ class DatabaseSeeder extends Seeder
     public function createCategories()
     {
         $categories = [
-            'Áo Thun Nam',
-            'Áo Thun Nữ',
-            'Áo Sơ Mi Nam',
-            'Áo Sơ Mi Nữ',
-            'Quần Jeans Nam',
-            'Quần Jeans Nữ',
-            'Quần Short',
-            'Váy Đầm',
-            'Áo Khoác',
-            'Áo Hoodie',
-            'Áo Blazer',
-            'Quần Tây',
-            'Đồ Thể Thao',
-            'Đồ Ngủ',
-            'Đồ Lót',
-            'Áo Len',
-            'Áo Polo',
-            'Set Bộ',
-            'Đồ Công Sở',
-            'Phụ Kiện Thời Trang'
+            'Shop',
+            'On Sale',
+            'New Arrivals',
+            'Brands',
+            'Casual',
+            'Formal',
+            'Party',
+            'Gym',
+            'T-shirts',
+            'Polo Shirts',
+            'Shirts',
+            'Jeans',
+            'Shorts',
+            'Hoodies',
+            'Outerwear',
+            'Sweaters',
+            'Blazers',
+            'Joggers',
+            'Accessories',
+            'Footwear',
         ];
 
         foreach ($categories as $categoryName) {
@@ -94,7 +95,7 @@ class DatabaseSeeder extends Seeder
                 ['slug' => Str::slug($categoryName)],
                 [
                     'name' => $categoryName,
-                    'description' => "Danh mục {$categoryName}"
+                    'description' => "Category for {$categoryName} products"
                 ]
             );
         }
@@ -102,91 +103,183 @@ class DatabaseSeeder extends Seeder
 
     public function createProducts()
     {
-        // Get all categories
-        $categories = Category::all();
+        $categories = Category::query()->select(['id', 'name', 'slug'])->get();
 
         if ($categories->isEmpty()) {
             return;
         }
 
-        // Ensure category_id = 1 exists
-        $categoryOne = Category::find(1);
-        if (!$categoryOne) {
-            return;
-        }
+        $categoryBySlug = $categories->keyBy('slug');
 
-        // Base product types
-        $baseProducts = [
-            'Áo Thun', 'Áo Sơ Mi', 'Quần Jeans', 'Quần Short',
-            'Váy', 'Đầm', 'Áo Khoác', 'Áo Hoodie',
-            'Áo Blazer', 'Quần Tây', 'Áo Len', 'Áo Polo',
-            'Set Bộ', 'Đồ Thể Thao', 'Đồ Ngủ',
-            'Áo Tanktop', 'Áo Cardigan', 'Quần Jogger',
-            'Chân Váy', 'Áo Croptop'
-        ];
+        $resolveCategoryId = function (array $preferredSlugs) use ($categoryBySlug, $categories) {
+            foreach ($preferredSlugs as $slug) {
+                if ($categoryBySlug->has($slug)) {
+                    return $categoryBySlug->get($slug)->id;
+                }
+            }
 
-        $adjectives = [
-            'Basic', 'Cao Cấp', 'Premium', 'Slim Fit',
-            'Oversize', 'Form Rộng', 'Hàn Quốc', 'Unisex',
-            'Vintage', 'Hiện Đại', 'Thanh Lịch',
-            'Trẻ Trung', 'Năng Động', 'Thời Trang',
-            'Mùa Hè', 'Mùa Đông'
-        ];
-
-        $materials = [
-            'Cotton', 'Lụa', 'Denim', 'Polyester',
-            'Len', 'Thun Lạnh', 'Kaki', 'Voan'
-        ];
-
-        // Helper function to generate product name
-        $generateName = function ($index) use ($baseProducts, $adjectives, $materials) {
-            $base = collect($baseProducts)->random();
-            $adj = collect($adjectives)->random();
-            $material = collect($materials)->random();
-
-            return "{$base} {$adj} {$material} {$index}";
+            return $categories->random()->id;
         };
 
-        /*
-        |--------------------------------------------------------------------------
-        | 1️⃣ Create 100 products for category_id = 1
-        |--------------------------------------------------------------------------
-        */
-        for ($i = 1; $i <= 100; $i++) {
+        $baseProducts = [
+            [
+                'name' => 'One Life Graphic T-shirt',
+                'price' => 260,
+                'image' => 'pic_t-shirt-main-1.png',
+                'description' => 'Graphic cotton t-shirt inspired by the featured product detail page.',
+                'category_slugs' => ['t-shirts', 'casual', 'shop'],
+            ],
+            [
+                'name' => 'Polo with Contrast Trims',
+                'price' => 212,
+                'image' => 'pic_polo_blue.png',
+                'description' => 'Classic polo with contrast details from the cart and product list UI.',
+                'category_slugs' => ['polo-shirts', 'casual', 'shop'],
+            ],
+            [
+                'name' => 'Gradient Graphic T-shirt',
+                'price' => 145,
+                'image' => 'pic_t_shirt.png',
+                'description' => 'Gradient print t-shirt highlighted in catalog and cart views.',
+                'category_slugs' => ['t-shirts', 'casual', 'shop'],
+            ],
+            [
+                'name' => 'Polo with Tipping Details',
+                'price' => 180,
+                'image' => 'pic_polo_tipping.png',
+                'description' => 'Minimal tipping-detail polo showcased in the catalog grid.',
+                'category_slugs' => ['polo-shirts', 'casual', 'shop'],
+            ],
+            [
+                'name' => 'Black Striped T-shirt',
+                'price' => 120,
+                'image' => 'pic_t_shirt_black.png',
+                'description' => 'Black striped tee featured across catalog and cart with promo price.',
+                'category_slugs' => ['t-shirts', 'casual', 'on-sale'],
+            ],
+            [
+                'name' => 'Skinny Fit Jeans',
+                'price' => 240,
+                'image' => 'product4.png',
+                'description' => 'Slim-cut denim jeans displayed in the product list section.',
+                'category_slugs' => ['jeans', 'casual', 'shop'],
+            ],
+            [
+                'name' => 'Checkered Shirt',
+                'price' => 180,
+                'image' => 'product5.png',
+                'description' => 'Checkered shirt from the homepage catalog examples.',
+                'category_slugs' => ['shirts', 'casual', 'new-arrivals'],
+            ],
+            [
+                'name' => 'Sleeve Striped T-shirt',
+                'price' => 130,
+                'image' => 'product6.png',
+                'description' => 'Sleeve-striped t-shirt featured in the UI product tiles.',
+                'category_slugs' => ['t-shirts', 'casual', 'shop'],
+            ],
+        ];
 
-            $productName = $generateName("C1-{$i}");
-            $slug = Str::slug($productName);
-
+        foreach ($baseProducts as $product) {
             Product::firstOrCreate(
-                ['slug' => $slug],
+                ['slug' => Str::slug($product['name'])],
                 [
-                    'name' => $productName,
-                    'price' => rand(150000, 1500000),
-                    'description' => "Sản phẩm {$productName} chất lượng cao.",
-                    'category_id' => 1,
-                    'image' => 'default-product.jpg'
+                    'name' => $product['name'],
+                    'price' => $product['price'],
+                    'description' => $product['description'],
+                    'category_id' => $resolveCategoryId($product['category_slugs']),
+                    'image' => $product['image'],
                 ]
             );
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | 2️⃣ Create 100 products for random categories
-        |--------------------------------------------------------------------------
-        */
-        for ($i = 1; $i <= 100; $i++) {
+        $targetProductCount = 180;
+        $existingCount = Product::count();
+        $remaining = max(0, $targetProductCount - $existingCount);
 
-            $productName = $generateName("R-{$i}");
-            $slug = Str::slug($productName);
+        if ($remaining === 0) {
+            return;
+        }
+
+        $styleWords = [
+            'Classic',
+            'Modern',
+            'Urban',
+            'Premium',
+            'Essential',
+            'Relaxed',
+            'Slim Fit',
+            'Oversized',
+            'Vintage',
+            'Sport',
+            'Everyday',
+            'Signature',
+        ];
+
+        $materials = [
+            'Cotton',
+            'Denim',
+            'Linen',
+            'Fleece',
+            'Knit',
+            'Jersey',
+            'Twill',
+            'Performance',
+        ];
+
+        $productTypeByCategorySlug = [
+            't-shirts' => ['Graphic T-shirt', 'Crew Neck Tee', 'Striped T-shirt'],
+            'polo-shirts' => ['Polo Shirt', 'Textured Polo', 'Contrast Polo'],
+            'shirts' => ['Oxford Shirt', 'Checkered Shirt', 'Casual Shirt'],
+            'jeans' => ['Slim Jeans', 'Straight Jeans', 'Relaxed Jeans'],
+            'shorts' => ['Cargo Shorts', 'Cotton Shorts', 'Denim Shorts'],
+            'hoodies' => ['Pullover Hoodie', 'Zip Hoodie', 'Fleece Hoodie'],
+            'outerwear' => ['Bomber Jacket', 'Lightweight Jacket', 'Windbreaker'],
+            'sweaters' => ['Crewneck Sweater', 'Knit Sweater', 'Cardigan'],
+            'blazers' => ['Tailored Blazer', 'Classic Blazer', 'Soft Blazer'],
+            'joggers' => ['Slim Joggers', 'Relaxed Joggers', 'Training Joggers'],
+            'accessories' => ['Canvas Belt', 'Minimal Cap', 'Travel Tote'],
+            'footwear' => ['Street Sneakers', 'Classic Loafers', 'Running Shoes'],
+            'casual' => ['Casual Tee', 'Everyday Shirt', 'Comfort Hoodie'],
+            'formal' => ['Formal Shirt', 'Dress Trousers', 'Suit Blazer'],
+            'party' => ['Party Shirt', 'Night Blazer', 'Statement Tee'],
+            'gym' => ['Training Tee', 'Gym Shorts', 'Performance Joggers'],
+            'shop' => ['Lifestyle Tee', 'Core Polo', 'Modern Jeans'],
+            'on-sale' => ['Sale Tee', 'Sale Polo', 'Sale Jeans'],
+            'new-arrivals' => ['New Arrival Tee', 'New Arrival Shirt', 'New Arrival Hoodie'],
+            'brands' => ['Signature Tee', 'Brand Polo', 'Brand Jeans'],
+        ];
+
+        $placeholderImages = [
+            'default-product.jpg',
+            'product1.png',
+            'product2.png',
+            'product3.png',
+            'product4.png',
+            'product5.png',
+            'product6.png',
+        ];
+
+        for ($i = 1; $i <= $remaining; $i++) {
+            $category = $categories[($i - 1) % $categories->count()];
+            $categorySlug = $category->slug;
+
+            $style = Arr::random($styleWords);
+            $material = Arr::random($materials);
+            $types = $productTypeByCategorySlug[$categorySlug] ?? ['Fashion Item'];
+            $type = Arr::random($types);
+
+            $suffix = str_pad((string) $i, 3, '0', STR_PAD_LEFT);
+            $name = "{$style} {$type} {$material} {$suffix}";
 
             Product::firstOrCreate(
-                ['slug' => $slug],
+                ['slug' => Str::slug($name)],
                 [
-                    'name' => $productName,
-                    'price' => rand(150000, 1500000),
-                    'description' => "Sản phẩm {$productName} chất lượng cao.",
-                    'category_id' => $categories->random()->id,
-                    'image' => 'default-product.jpg'
+                    'name' => $name,
+                    'price' => rand(80, 320),
+                    'description' => "{$name} for {$category->name} looks, designed for daily comfort and versatile styling.",
+                    'category_id' => $category->id,
+                    'image' => Arr::random($placeholderImages),
                 ]
             );
         }
@@ -194,49 +287,51 @@ class DatabaseSeeder extends Seeder
 
     public function createOrders()
     {
-        $targetEmail = 'user1@example.com';
-        $user = User::where('email', $targetEmail)->first();
+        $users = User::where('role', 'user')->get();
+        $products = Product::query()->select(['id', 'price'])->get();
 
-        if (!$user) {
+        if ($users->isEmpty() || $products->isEmpty()) {
             return;
         }
 
-        $products = Product::all();
+        $targetOrderCount = 40;
+        $existingOrderCount = Order::count();
+        $remaining = max(0, $targetOrderCount - $existingOrderCount);
 
-        for ($i = 0; $i < 20; $i++) {
+        if ($remaining === 0) {
+            return;
+        }
 
-            DB::transaction(function () use ($user, $products) {
-
+        for ($i = 0; $i < $remaining; $i++) {
+            DB::transaction(function () use ($users, $products) {
                 $order = Order::create([
-                    'user_id' => $user->id,
+                    'user_id' => $users->random()->id,
                     'total_amount' => 0,
-                    'status' => collect(['pending', 'processing', 'completed'])->random()
+                    'status' => Arr::random(['pending', 'processing', 'completed']),
                 ]);
 
                 $totalAmount = 0;
-
                 $itemsCount = rand(1, 5);
-                $selectedProducts = $products->random($itemsCount);
+                $selectedProducts = $products->shuffle()->take($itemsCount);
 
                 foreach ($selectedProducts as $product) {
-
-                    $quantity = rand(1, 3);
-                    $price = $product->price;
-                    $total = $price * $quantity;
+                    $quantity = rand(1, 4);
+                    $price = (float) $product->price;
+                    $lineTotal = $price * $quantity;
 
                     OrderItem::create([
                         'order_id' => $order->id,
                         'product_id' => $product->id,
                         'quantity' => $quantity,
                         'price' => $price,
-                        'total' => $total,
+                        'total' => $lineTotal,
                     ]);
 
-                    $totalAmount += $total;
+                    $totalAmount += $lineTotal;
                 }
 
                 $order->update([
-                    'total_amount' => $totalAmount
+                    'total_amount' => $totalAmount,
                 ]);
             });
         }

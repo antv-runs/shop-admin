@@ -13,9 +13,9 @@ class UpdateProductDTO
     public function __construct(
         public readonly string $name,
         public readonly float $price,
+        public readonly ?float $compare_price = null,
         public readonly ?string $description = null,
         public readonly ?int $category_id = null,
-        public readonly ?string $image = null,
     ) {}
 
     /**
@@ -26,9 +26,9 @@ class UpdateProductDTO
         return new self(
             name: $data['name'],
             price: (float) $data['price'],
+            compare_price: isset($data['compare_price']) ? (float) $data['compare_price'] : null,
             description: $data['description'] ?? null,
             category_id: $data['category_id'] ?? null,
-            image: $data['image'] ?? null,
         );
     }
 
@@ -40,9 +40,9 @@ class UpdateProductDTO
         return [
             'name' => $this->name,
             'price' => $this->price,
+            'compare_price' => $this->compare_price,
             'description' => $this->description,
             'category_id' => $this->category_id,
-            'image' => $this->image,
         ];
     }
 }

@@ -10,12 +10,15 @@
             @csrf
 
             <div>
-                <label class="block font-medium">Image (one):</label>
-                <div class="mb-2">
-                    <img id="preview" src="" alt="Product Image" class="h-24 w-auto object-cover hidden">
-                </div>
-                <input type="file" name="image" id="image" accept="image/*" class="mt-1 block w-full">
-                @error('image') <div class="text-danger text-red-600">{{ $message }}</div> @enderror
+                <label class="block font-medium">Images:</label>
+                <div id="preview-list" class="mb-2 flex flex-wrap gap-2"></div>
+                <input type="file" name="images[]" id="images" accept="image/*" multiple class="mt-1 block w-full">
+                @error('images') <div class="text-danger text-red-600">{{ $message }}</div> @enderror
+                @foreach ($errors->get('images.*') as $messages)
+                    @foreach ($messages as $message)
+                        <div class="text-danger text-red-600">{{ $message }}</div>
+                    @endforeach
+                @endforeach
             </div>
 
             <div>
@@ -56,20 +59,27 @@
     </div>
 
     <script>
-        document.getElementById('image').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            const preview = document.getElementById('preview');
-            if (!file) {
-                preview.classList.add('hidden');
-                preview.src = '';
+        document.getElementById('images').addEventListener('change', function(event) {
+            const previewList = document.getElementById('preview-list');
+            previewList.innerHTML = '';
+
+            const files = Array.from(event.target.files || []);
+
+            if (!files.length) {
                 return;
             }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
+
+            files.forEach(function(file) {
+                const reader = new window.FileReader();
+                reader.onload = function(e) {
+                    const image = document.createElement('img');
+                    image.src = e.target.result;
+                    image.alt = file.name;
+                    image.className = 'h-24 w-auto rounded object-cover';
+                    previewList.appendChild(image);
+                };
+                reader.readAsDataURL(file);
+            });
         });
     </script>
 @endsection

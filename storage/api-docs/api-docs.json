@@ -312,37 +312,9 @@
                 "tags": [
                     "Categories"
                 ],
-                "summary": "List all categories",
-                "description": "Get paginated list of categories with optional search",
+                "summary": "List storefront categories",
+                "description": "Get categories used by storefront navigation",
                 "operationId": "ac9c4d978ea4e5b72915ca9728e5b8b1",
-                "parameters": [
-                    {
-                        "name": "search",
-                        "in": "query",
-                        "description": "Search by category name",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "page",
-                        "in": "query",
-                        "description": "Page number",
-                        "schema": {
-                            "type": "integer",
-                            "default": 1
-                        }
-                    },
-                    {
-                        "name": "per_page",
-                        "in": "query",
-                        "description": "Items per page",
-                        "schema": {
-                            "type": "integer",
-                            "default": 15
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Categories retrieved successfully",
@@ -355,7 +327,8 @@
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "Categories retrieved successfully"
                                         },
                                         "data": {
                                             "type": "array",
@@ -1031,8 +1004,8 @@
                 "tags": [
                     "Products"
                 ],
-                "summary": "List all products",
-                "description": "Get paginated list of products with optional search and category filtering",
+                "summary": "Get storefront products",
+                "description": "Retrieve paginated storefront products for product listing",
                 "operationId": "d97d1c3727cbac49708b85f7d11f7d58",
                 "parameters": [
                     {
@@ -1040,7 +1013,8 @@
                         "in": "query",
                         "description": "Search by product name",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "maxLength": 255
                         }
                     },
                     {
@@ -1052,12 +1026,27 @@
                         }
                     },
                     {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by status",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "deleted",
+                                "all",
+                                "trashed"
+                            ]
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
                         "schema": {
                             "type": "integer",
-                            "default": 1
+                            "default": 1,
+                            "minimum": 1
                         }
                     },
                     {
@@ -1066,7 +1055,9 @@
                         "description": "Items per page",
                         "schema": {
                             "type": "integer",
-                            "default": 15
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
                         }
                     }
                 ],
@@ -1082,7 +1073,8 @@
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "Products retrieved successfully"
                                         },
                                         "data": {
                                             "type": "array",
@@ -1095,6 +1087,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
                 }
             },
@@ -1187,8 +1182,8 @@
                 "tags": [
                     "Products"
                 ],
-                "summary": "Upload product image",
-                "description": "Upload an image for a product and update its image path. The image will be stored on Amazon S3.",
+                "summary": "Upload product images",
+                "description": "Upload one or more images for a product. The first uploaded image becomes the product thumbnail and all uploaded images are stored in the product gallery.",
                 "operationId": "b7730b90ea2ab130219528aa7018a283",
                 "requestBody": {
                     "required": true,
@@ -1197,7 +1192,7 @@
                             "schema": {
                                 "required": [
                                     "id",
-                                    "image"
+                                    "images[]"
                                 ],
                                 "properties": {
                                     "id": {
@@ -1205,10 +1200,14 @@
                                         "type": "integer",
                                         "example": 1
                                     },
-                                    "image": {
-                                        "description": "Image file (jpeg, png, jpg, webp, max 2MB)",
-                                        "type": "string",
-                                        "format": "binary"
+                                    "images[]": {
+                                        "description": "Array of image files",
+                                        "type": "array",
+                                        "items": {
+                                            "description": "Image file (jpeg, png, jpg, webp, max 2MB)",
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -1218,7 +1217,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Image uploaded successfully",
+                        "description": "Product images uploaded successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1229,10 +1228,37 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Product image uploaded successfully"
+                                            "example": "Product images uploaded successfully"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/Product"
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Basic T-shirt"
+                                                },
+                                                "image": {
+                                                    "type": "string",
+                                                    "example": "products/thumbnail.jpg",
+                                                    "nullable": true
+                                                },
+                                                "image_url": {
+                                                    "type": "string",
+                                                    "example": "https://cdn.example.com/products/thumbnail.jpg",
+                                                    "nullable": true
+                                                },
+                                                "images": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "products/gallery-1.jpg"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1260,19 +1286,19 @@
                 ]
             }
         },
-        "/api/products/{id}": {
+        "/api/products/{slug}": {
             "get": {
                 "tags": [
                     "Products"
                 ],
-                "summary": "Get product detail",
-                "description": "Retrieve a single product by ID or slug",
-                "operationId": "c87fb2e4d617e7b36c712cad358acdb8",
+                "summary": "Get storefront product detail",
+                "description": "Retrieve storefront product detail by slug",
+                "operationId": "5bbb6d725346d38781b256ed5c715d62",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "slug",
                         "in": "path",
-                        "description": "Product ID or slug",
+                        "description": "Product slug",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -1291,7 +1317,8 @@
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "Product retrieved successfully"
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/Product"
@@ -1306,7 +1333,9 @@
                         "description": "Product not found"
                     }
                 }
-            },
+            }
+        },
+        "/api/products/{id}": {
             "delete": {
                 "tags": [
                     "Products"
@@ -2432,9 +2461,21 @@
                     "category": {
                         "$ref": "#/components/schemas/Category"
                     },
+                    "image": {
+                        "type": "string",
+                        "example": "products/product-main.jpg",
+                        "nullable": true
+                    },
                     "image_url": {
                         "type": "string",
                         "nullable": true
+                    },
+                    "images": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "products/product-gallery-1.jpg"
+                        }
                     },
                     "created_at": {
                         "type": "string",

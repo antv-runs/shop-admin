@@ -29,26 +29,32 @@ class ProductController extends BaseController
     }
 
     /**
-     * Get all products with pagination, search and category filtering
+     * Storefront endpoint: list products for shop UI.
      *
      * @OA\Get(
      *     path="/api/products",
-     *     summary="List all products",
-     *     description="Get paginated list of products with optional search and category filtering",
+     *     summary="Get storefront products",
+     *     description="Retrieve paginated storefront products for product listing",
      *     tags={"Products"},
-     *     @OA\Parameter(name="search", in="query", description="Search by product name", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="search", in="query", description="Search by product name", @OA\Schema(type="string", maxLength=255)),
      *     @OA\Parameter(name="category_id", in="query", description="Filter by category ID", @OA\Schema(type="integer")),
-     *     @OA\Parameter(name="page", in="query", description="Page number", @OA\Schema(type="integer", default=1)),
-     *     @OA\Parameter(name="per_page", in="query", description="Items per page", @OA\Schema(type="integer", default=15)),
+     *     @OA\Parameter(name="status", in="query", description="Filter by status", @OA\Schema(type="string", enum={"active", "deleted", "all", "trashed"})),
+     *     @OA\Parameter(name="page", in="query", description="Page number", @OA\Schema(type="integer", minimum=1, default=1)),
+     *     @OA\Parameter(name="per_page", in="query", description="Items per page", @OA\Schema(type="integer", minimum=1, maximum=100, default=15)),
      *     @OA\Response(
      *         response=200,
      *         description="Products retrieved successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string"),
-     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Product"))
+     *             @OA\Property(property="message", type="string", example="Products retrieved successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(ref="#/components/schemas/Product")
+     *             )
      *         )
-     *     )
+     *     ),
+     *     @OA\Response(response=422, description="Validation error")
      * )
      */
     public function index(ProductIndexRequest $request)
@@ -102,11 +108,6 @@ class ProductController extends BaseController
     {
         $validated = $request->validated();
 
-        // Handle image upload - delegated to FileUploadService
-        if ($request->hasFile('image')) {
-            $validated['image'] = $this->fileUploadService->uploadProductImage($request->file('image'));
-        }
-
         // Create DTO from validated data
         $dto = CreateProductDTO::fromArray($validated);
 
@@ -124,8 +125,8 @@ class ProductController extends BaseController
      *
      * @OA\Post(
      *     path="/api/products/upload",
-     *     summary="Upload product image",
-     *     description="Upload an image for a product and update its image path. The image will be stored on Amazon S3.",
+      *     summary="Upload product images",
+      *     description="Upload one or more images for a product. The first uploaded image becomes the product thumbnail and all uploaded images are stored in the product gallery.",
      *     tags={"Products"},
      *     security={{"bearerAuth":{}}},
      *
@@ -134,7 +135,7 @@ class ProductController extends BaseController
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"id","image"},
+    *                 required={"id","images[]"},
      *
      *                 @OA\Property(
      *                     property="id",
@@ -144,22 +145,38 @@ class ProductController extends BaseController
      *                 ),
      *
      *                 @OA\Property(
-     *                     property="image",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Image file (jpeg, png, jpg, webp, max 2MB)"
+    *                     property="images[]",
+      *                     type="array",
+      *                     description="Array of image files",
+      *                     @OA\Items(
+      *                         type="string",
+      *                         format="binary",
+      *                         description="Image file (jpeg, png, jpg, webp, max 2MB)"
+      *                     )
      *                 )
-     *             )
+      *             )
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Image uploaded successfully",
+      *         description="Product images uploaded successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Product image uploaded successfully"),
-     *             @OA\Property(property="data", ref="#/components/schemas/Product")
+      *             @OA\Property(property="message", type="string", example="Product images uploaded successfully"),
+      *             @OA\Property(
+      *                 property="data",
+      *                 type="object",
+      *                 @OA\Property(property="id", type="integer", example=1),
+      *                 @OA\Property(property="name", type="string", example="Basic T-shirt"),
+      *                 @OA\Property(property="image", type="string", nullable=true, example="products/thumbnail.jpg"),
+      *                 @OA\Property(property="image_url", type="string", nullable=true, example="https://cdn.example.com/products/thumbnail.jpg"),
+      *                 @OA\Property(
+      *                     property="images",
+      *                     type="array",
+      *                     @OA\Items(type="string", example="products/gallery-1.jpg")
+      *                 )
+      *             )
      *         )
      *     ),
      *
@@ -186,39 +203,44 @@ class ProductController extends BaseController
      */
     public function upload(UploadImageRequest $request)
     {
-        $dto = UploadImageDTO::fromArray($request->toArray());
+        $dto = UploadImageDTO::fromArray([
+            'id' => (int) $request->input('id'),
+            'images' => $request->file('images', []),
+        ]);
+
         $product = $this->productService->uploadProductImage($dto);
 
         return $this->success(
             new ProductResource($product),
-            'Product image updated successfully'
+            'Product images uploaded successfully'
         );
     }
 
     /**
-     * Get a specific product detail by ID or slug
+     * Storefront endpoint: product detail by slug.
      *
      * @OA\Get(
-     *     path="/api/products/{id}",
-     *     summary="Get product detail",
-     *     description="Retrieve a single product by ID or slug",
+     *     path="/api/products/{slug}",
+     *     summary="Get storefront product detail",
+     *     description="Retrieve storefront product detail by slug",
      *     tags={"Products"},
-     *     @OA\Parameter(name="id", in="path", required=true, description="Product ID or slug", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="slug", in="path", required=true, description="Product slug", @OA\Schema(type="string")),
      *     @OA\Response(
      *         response=200,
      *         description="Product retrieved successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="message", type="string", example="Product retrieved successfully"),
      *             @OA\Property(property="data", ref="#/components/schemas/Product")
      *         )
      *     ),
      *     @OA\Response(response=404, description="Product not found")
      * )
      */
-    public function show($id)
+    public function show(string $slug)
     {
-        $product = $this->productService->getProduct($id);
+        $product = $this->productService->findProductBySlugForStore($slug);
+
         return $this->success(
             new ProductResource($product),
             'Product retrieved successfully'
@@ -267,11 +289,6 @@ class ProductController extends BaseController
     {
         $product = $this->productService->getProduct($id);
         $validated = $request->validated();
-
-        // Handle image upload - delegated to FileUploadService
-        if ($request->hasFile('image')) {
-            $validated['image'] = $this->fileUploadService->replaceFile($product->image, $request->file('image'));
-        }
 
         // Create DTO from validated data
         $dto = UpdateProductDTO::fromArray($validated);
@@ -572,4 +589,5 @@ class ProductController extends BaseController
             ]
         );
     }
+
 }

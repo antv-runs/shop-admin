@@ -136,4 +136,33 @@ class CategoryRepository implements CategoryRepositoryInterface
     {
         return Category::paginate($perPage);
     }
+
+    /**
+     * Get categories for storefront navigation
+     */
+    public function getPublicCategories(CategoryFilterDTO $filter)
+    {
+        $query = Category::query()
+            ->withCount('children')
+            ->when($filter->search, function ($q) use ($filter) {
+                $q->where('name', 'like', "%{$filter->search}%");
+            })
+            ->when($filter->parentId !== null, function ($q) use ($filter) {
+                $q->where('parent_id', $filter->parentId);
+            })
+            ->when($filter->hasChildren === true, function ($q) {
+                $q->having('children_count', '>', 0);
+            })
+            ->when($filter->hasChildren === false, function ($q) {
+                $q->having('children_count', '=', 0);
+            });
+
+        if ($filter->sort === 'created_at') {
+            $query->orderBy('created_at', 'desc');
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+
+        return $query->paginate($filter->perPage, ['*'], 'page', $filter->page);
+    }
 }

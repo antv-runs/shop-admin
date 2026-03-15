@@ -50,4 +50,19 @@ interface ProductRepositoryInterface
      * Paginate products
      */
     public function paginate($perPage = 10);
+
+    /**
+     * Find public product by slug
+     */
+    public function findPublicBySlug(string $slug);
+
+    /**
+     * Get related public product IDs
+     */
+    public function getRelatedPublicProductIds(int $productId, ?int $categoryId = null, int $limit = 4): array;
+
+    /**
+     * Create a gallery image record for product
+     */
+    public function createProductImage($productId, $path);
 }

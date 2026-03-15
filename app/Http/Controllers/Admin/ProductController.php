@@ -5,24 +5,20 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
 use App\Http\Requests\ProductIndexRequest;
-use App\Models\Product;
 use App\Contracts\ProductServiceInterface;
-use App\Contracts\FileUploadServiceInterface;
 use App\DTOs\CreateProductDTO;
 use App\DTOs\UpdateProductDTO;
 use App\DTOs\ProductFilterDTO;
+use App\DTOs\UploadImageDTO;
 use App\Exceptions\BusinessException;
-use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
     private ProductServiceInterface $productService;
-    private FileUploadServiceInterface $fileUploadService;
 
-    public function __construct(ProductServiceInterface $productService, FileUploadServiceInterface $fileUploadService)
+    public function __construct(ProductServiceInterface $productService)
     {
         $this->productService = $productService;
-        $this->fileUploadService = $fileUploadService;
     }
 
     public function index(ProductIndexRequest $request)
@@ -44,16 +40,17 @@ class ProductController extends Controller
     {
         $validated = $request->validated();
 
-        // Handle image upload - delegated to FileUploadService
-        // Single Responsibility: controller doesn't handle file operations
-        if ($request->hasFile('image')) {
-            $validated['image'] = $this->fileUploadService->uploadProductImage($request->file('image'));
-        }
-
         // Create DTO from validated data
         $dto = CreateProductDTO::fromArray($validated);
 
-        $this->productService->createProduct($dto);
+        $product = $this->productService->createProduct($dto);
+
+        if ($request->hasFile('images')) {
+            $this->productService->uploadProductImage(UploadImageDTO::fromArray([
+                'id' => $product->id,
+                'images' => $request->file('images', []),
+            ]));
+        }
 
         return redirect()->route('admin.products.index')
              ->with('success', 'Product created successfully');
@@ -71,16 +68,17 @@ class ProductController extends Controller
         $product = $this->productService->getProduct($id);
         $validated = $request->validated();
 
-        // Handle image upload - delegated to FileUploadService
-        // Single Responsibility: controller doesn't handle file operations
-        if ($request->hasFile('image')) {
-            $validated['image'] = $this->fileUploadService->replaceFile($product->image, $request->file('image'));
-        }
-
         // Create DTO from validated data
         $dto = UpdateProductDTO::fromArray($validated);
 
         $this->productService->updateProduct($product, $dto);
+
+        if ($request->hasFile('images')) {
+            $this->productService->uploadProductImage(UploadImageDTO::fromArray([
+                'id' => $product->id,
+                'images' => $request->file('images', []),
+            ]));
+        }
 
         return redirect()->route('admin.products.index')
              ->with('success', 'Product updated successfully');

@@ -4,7 +4,7 @@ namespace App\Repositories;
 
 use App\Contracts\Repositories\ProductRepositoryInterface;
 use App\Models\Product;
-use App\Enums\ItemStatus;
+use App\Models\ProductImage;
 use App\DTOs\ProductFilterDTO;
 
 class ProductRepository implements ProductRepositoryInterface
@@ -22,34 +22,17 @@ class ProductRepository implements ProductRepositoryInterface
      */
     public function getAll(ProductFilterDTO $filter)
     {
-        $status = $filter->status ?? ItemStatus::ACTIVE->value;
+        $query = Product::query()
+            ->with(['category', 'images'])
+            ->where('is_active', true)
+            ->latest('id');
 
-        if ($status === ItemStatus::DELETED->value) {
-            $query = Product::onlyTrashed()->with('category');
-        } elseif ($status === ItemStatus::ALL->value) {
-            $query = Product::withTrashed()->with('category');
-        } else {
-            $query = Product::with('category');
-        }
-
-        // Search by name
         if (!empty($filter->search)) {
             $query->where('name', 'like', "%{$filter->search}%");
         }
 
-        // Filter by category
         if ($filter->categoryId !== null) {
             $query->where('category_id', $filter->categoryId);
-        }
-
-        // Sort (using default sort)
-        $sortBy = 'id';
-        $sortOrder = 'desc';
-
-        if (in_array($sortBy, ['id', 'name', 'price', 'created_at'])) {
-            $query->orderBy($sortBy, $sortOrder);
-        } else {
-            $query->latest();
         }
 
         return $query->paginate($filter->perPage, ['*'], 'page', $filter->page);
@@ -128,5 +111,49 @@ class ProductRepository implements ProductRepositoryInterface
     public function paginate($perPage = 10)
     {
         return Product::paginate($perPage);
+    }
+
+    /**
+     * Find public product by slug
+     */
+    public function findPublicBySlug(string $slug)
+    {
+        return Product::query()
+            ->with(['category', 'images'])
+            ->where('slug', $slug)
+            ->firstOrFail();
+    }
+
+    /**
+     * Get related public product IDs
+     */
+    public function getRelatedPublicProductIds(int $productId, ?int $categoryId = null, int $limit = 4): array
+    {
+        $query = Product::query()
+            ->where('id', '!=', $productId)
+            ->latest('id');
+
+        if (!empty($categoryId)) {
+            $query->where('category_id', $categoryId);
+        }
+
+        return $query->limit($limit)->pluck('id')->map(fn ($id) => (string) $id)->all();
+    }
+
+    /**
+     * Create gallery image record for product
+     */
+    public function createProductImage($productId, $path)
+    {
+        $nextSortOrder = (int) ProductImage::query()
+            ->where('product_id', $productId)
+            ->max('sort_order') + 1;
+
+        return ProductImage::create([
+            'product_id' => $productId,
+            'image_url' => $path,
+            'sort_order' => $nextSortOrder,
+            'is_primary' => false,
+        ]);
     }
 }

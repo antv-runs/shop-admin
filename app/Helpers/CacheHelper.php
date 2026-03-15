@@ -2,11 +2,20 @@
 
 namespace App\Helpers;
 
+use Illuminate\Cache\TaggableStore;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class CacheHelper
 {
+    /**
+     * Check if the current cache driver supports tagging.
+     */
+    private static function supportsTagging(): bool
+    {
+        return Cache::getStore() instanceof TaggableStore;
+    }
+
     /**
      * Remember data with cache hit/miss logging
      *
@@ -44,6 +53,11 @@ class CacheHelper
      */
     public static function rememberWithTags(array $tags, string $key, int $ttl, \Closure $callback)
     {
+        if (!self::supportsTagging()) {
+            Log::warning("Cache driver does not support tagging, falling back to non-tagged cache.", ['tags' => $tags, 'key' => $key]);
+            return static::remember($key, $ttl, $callback);
+        }
+
         $taggedCache = Cache::tags($tags);
         $value = $taggedCache->get($key);
 
@@ -80,6 +94,11 @@ class CacheHelper
      */
     public static function flushTags(array $tags): void
     {
+        if (!self::supportsTagging()) {
+            Log::warning("Cache driver does not support tagging, skipping tag flush.", ['tags' => $tags]);
+            return;
+        }
+
         foreach ($tags as $tag) {
             Cache::tags([$tag])->flush();
             Log::info("Cache flushed: {$tag}");

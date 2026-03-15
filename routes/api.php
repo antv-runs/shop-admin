@@ -31,7 +31,7 @@ Route::prefix('auth')->controller(AuthController::class)->group(function () {
 Route::prefix('products')->controller(ProductController::class)->group(function () {
     Route::get('/', 'index');
     Route::get('/exports/{filename}', 'downloadExport')->name('products.download-export');
-    Route::get('/{id}', 'show')->where('id', '[0-9]+');
+    Route::get('/{slug}', 'show');
 });
 
 // Categories
@@ -39,7 +39,6 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
     Route::get('/', 'index');
     Route::get('/{id}', 'show')->where('id', '[0-9]+');
 });
-
 
 // ==========================
 // Protected Routes

@@ -12,9 +12,20 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class ProductRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if (!$this->has('images') && $this->hasFile('image')) {
+            $this->merge([
+                'images' => [$this->file('image')],
+            ]);
+        }
+    }
+
     public function authorize()
     {
-        return auth()->check() && auth()->user()->isAdmin();
+        $user = auth()->user();
+
+        return $user !== null && $user->role === 'admin';
     }
 
     public function rules()
@@ -23,9 +34,11 @@ class ProductRequest extends FormRequest
             return [
                 'name' => 'required|string|max:255',
                 'price' => 'required|numeric|min:0',
+                'compare_price' => 'nullable|numeric|gte:price',
                 'description' => 'nullable|string',
                 'category_id' => 'nullable|exists:categories,id',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+                'images' => 'nullable|array',
+                'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
             ];
         }
 
@@ -33,18 +46,21 @@ class ProductRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
+            'compare_price' => 'nullable|numeric|gte:price',
             'description' => 'nullable|string',
             'category_id' => 'nullable|exists:categories,id',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
         ];
     }
 
     public function messages()
     {
         return [
-            'image.image' => 'The image must be a valid image file.',
-            'image.mimes' => 'The image must be a file of type: jpeg, png, jpg, webp.',
-            'image.max' => 'The image may not be greater than 2MB.',
+            'images.array' => 'Images must be uploaded as an array.',
+            'images.*.image' => 'Each selected file must be a valid image.',
+            'images.*.mimes' => 'Each image must be a file of type: jpeg, png, jpg, webp.',
+            'images.*.max' => 'Each image may not be greater than 2MB.',
         ];
     }
 }

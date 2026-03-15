@@ -8,7 +8,9 @@ class ProductApiRequest extends FormRequest
 {
     public function authorize()
     {
-        return auth()->check() && auth()->user()->isAdmin();
+        $user = auth()->user();
+
+        return $user !== null && $user->role === 'admin';
     }
 
     public function rules()
@@ -17,6 +19,7 @@ class ProductApiRequest extends FormRequest
             return [
                 'name' => 'required|string|max:255',
                 'price' => 'required|numeric|min:0',
+                'compare_price' => 'nullable|numeric|gte:price',
                 'description' => 'nullable|string',
                 'category_id' => 'nullable|exists:categories,id',
                 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -27,6 +30,7 @@ class ProductApiRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
+            'compare_price' => 'nullable|numeric|gte:price',
             'description' => 'nullable|string',
             'category_id' => 'nullable|exists:categories,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',

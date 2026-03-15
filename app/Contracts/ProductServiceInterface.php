@@ -64,4 +64,14 @@ interface ProductServiceInterface
      * Upload a product image and return public URL (S3)
      */
     public function uploadProductImage(UploadImageDTO $dto);
+
+    /**
+     * Find storefront product by slug
+     */
+    public function findProductBySlugForStore(string $slug);
+
+    /**
+     * Get related product IDs for storefront detail page
+     */
+    public function getRelatedProductIdsForStore(int $productId, ?int $categoryId = null, int $limit = 4): array;
 }

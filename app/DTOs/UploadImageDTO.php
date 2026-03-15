@@ -7,19 +7,32 @@ use Illuminate\Http\UploadedFile;
 class UploadImageDTO
 {
     public int $id;
-    public UploadedFile $image;
+    /**
+     * @var UploadedFile[]
+     */
+    public array $images;
 
-    public function __construct(int $id, UploadedFile $image)
+    public function __construct(int $id, array $images)
     {
         $this->id = $id;
-        $this->image = $image;
+        $this->images = $images;
     }
 
     public static function fromArray(array $data): self
     {
+        $images = $data['images'] ?? [];
+
+        if ($images instanceof UploadedFile) {
+            $images = [$images];
+        }
+
+        if (isset($data['image']) && empty($images)) {
+            $images = [$data['image']];
+        }
+
         return new self(
             $data['id'],
-            $data['image']
+            $images
         );
     }
 }
