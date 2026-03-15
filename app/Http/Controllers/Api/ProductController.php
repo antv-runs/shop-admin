@@ -72,7 +72,7 @@ class ProductController extends BaseController
      * @OA\Post(
      *     path="/api/products",
      *     summary="Create new product",
-     *     description="Create a new product (Admin only). Validation: name required max:255, price required numeric min:0, category_id nullable exists:categories, image nullable mimes:jpeg,png,jpg,gif max:2048",
+     *     description="Create a new product (Admin only). Validation: name required max:255, price required numeric min:0, category_id nullable exists:categories",
      *     tags={"Products"},
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
@@ -85,8 +85,7 @@ class ProductController extends BaseController
      *                 @OA\Property(property="name", type="string", maxLength=255),
      *                 @OA\Property(property="price", type="number", format="float", minimum=0),
      *                 @OA\Property(property="description", type="string"),
-     *                 @OA\Property(property="category_id", type="integer"),
-     *                 @OA\Property(property="image", type="string", format="binary", description="Image file (jpeg, png, jpg, gif, max 2MB)")
+     *                 @OA\Property(property="category_id", type="integer")
      *             )
      *         )
      *     ),
@@ -169,12 +168,17 @@ class ProductController extends BaseController
       *                 type="object",
       *                 @OA\Property(property="id", type="integer", example=1),
       *                 @OA\Property(property="name", type="string", example="Basic T-shirt"),
-      *                 @OA\Property(property="image", type="string", nullable=true, example="products/thumbnail.jpg"),
-      *                 @OA\Property(property="image_url", type="string", nullable=true, example="https://cdn.example.com/products/thumbnail.jpg"),
+      *                 @OA\Property(property="thumbnail", type="string", nullable=true, example="https://cdn.example.com/products/thumbnail.jpg"),
       *                 @OA\Property(
       *                     property="images",
       *                     type="array",
-      *                     @OA\Items(type="string", example="products/gallery-1.jpg")
+      *                     @OA\Items(
+      *                         type="object",
+      *                         @OA\Property(property="id", type="string"),
+      *                         @OA\Property(property="image_url", type="string"),
+      *                         @OA\Property(property="is_primary", type="boolean"),
+      *                         @OA\Property(property="sort_order", type="integer")
+      *                     )
       *                 )
       *             )
      *         )
@@ -265,8 +269,7 @@ class ProductController extends BaseController
      *                 @OA\Property(property="name", type="string", maxLength=255),
      *                 @OA\Property(property="price", type="number", format="float", minimum=0),
      *                 @OA\Property(property="description", type="string"),
-     *                 @OA\Property(property="category_id", type="integer"),
-     *                 @OA\Property(property="image", type="string", format="binary")
+     *                 @OA\Property(property="category_id", type="integer")
      *             )
      *         )
      *     ),

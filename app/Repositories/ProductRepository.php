@@ -23,7 +23,7 @@ class ProductRepository implements ProductRepositoryInterface
     public function getAll(ProductFilterDTO $filter)
     {
         $query = Product::query()
-            ->with(['category', 'images'])
+            ->with(['category', 'images', 'primaryImage'])
             ->where('is_active', true)
             ->latest('id');
 
@@ -119,7 +119,7 @@ class ProductRepository implements ProductRepositoryInterface
     public function findPublicBySlug(string $slug)
     {
         return Product::query()
-            ->with(['category', 'images'])
+            ->with(['category', 'images', 'primaryImage'])
             ->where('slug', $slug)
             ->firstOrFail();
     }

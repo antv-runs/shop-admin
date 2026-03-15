@@ -69,13 +69,13 @@ class Handler extends ExceptionHandler
                 return $this->error(
                     'Validation error',
                     Response::HTTP_UNPROCESSABLE_ENTITY,
-                    ['image' => [$message]]
+                    ['file' => [$message]]
                 );
             }
 
             return redirect()->back()
-                ->withInput($request->except('image'))
-                ->withErrors(['image' => $message]);
+                ->withInput($request->except('file', 'image', 'images'))
+                ->withErrors(['file' => $message]);
         }
 
         // Force JSON for API routes

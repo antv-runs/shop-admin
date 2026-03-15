@@ -1098,7 +1098,7 @@
                     "Products"
                 ],
                 "summary": "Create new product",
-                "description": "Create a new product (Admin only). Validation: name required max:255, price required numeric min:0, category_id nullable exists:categories, image nullable mimes:jpeg,png,jpg,gif max:2048",
+                "description": "Create a new product (Admin only). Validation: name required max:255, price required numeric min:0, category_id nullable exists:categories",
                 "operationId": "785644b7d7dd38af4b51dafd0fbc1b6d",
                 "requestBody": {
                     "description": "Product data per ProductRequest validation",
@@ -1125,11 +1125,6 @@
                                     },
                                     "category_id": {
                                         "type": "integer"
-                                    },
-                                    "image": {
-                                        "description": "Image file (jpeg, png, jpg, gif, max 2MB)",
-                                        "type": "string",
-                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -1240,12 +1235,7 @@
                                                     "type": "string",
                                                     "example": "Basic T-shirt"
                                                 },
-                                                "image": {
-                                                    "type": "string",
-                                                    "example": "products/thumbnail.jpg",
-                                                    "nullable": true
-                                                },
-                                                "image_url": {
+                                                "thumbnail": {
                                                     "type": "string",
                                                     "example": "https://cdn.example.com/products/thumbnail.jpg",
                                                     "nullable": true
@@ -1253,8 +1243,21 @@
                                                 "images": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "string",
-                                                        "example": "products/gallery-1.jpg"
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "image_url": {
+                                                                "type": "string"
+                                                            },
+                                                            "is_primary": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "sort_order": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "type": "object"
                                                     }
                                                 }
                                             },
@@ -1433,10 +1436,6 @@
                                     },
                                     "category_id": {
                                         "type": "integer"
-                                    },
-                                    "image": {
-                                        "type": "string",
-                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -2461,20 +2460,29 @@
                     "category": {
                         "$ref": "#/components/schemas/Category"
                     },
-                    "image": {
+                    "thumbnail": {
                         "type": "string",
-                        "example": "products/product-main.jpg",
-                        "nullable": true
-                    },
-                    "image_url": {
-                        "type": "string",
+                        "example": "https://cdn.example.com/products/product-main.jpg",
                         "nullable": true
                     },
                     "images": {
                         "type": "array",
                         "items": {
-                            "type": "string",
-                            "example": "products/product-gallery-1.jpg"
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "image_url": {
+                                    "type": "string"
+                                },
+                                "is_primary": {
+                                    "type": "boolean"
+                                },
+                                "sort_order": {
+                                    "type": "integer"
+                                }
+                            },
+                            "type": "object"
                         }
                     },
                     "created_at": {

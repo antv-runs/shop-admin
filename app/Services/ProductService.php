@@ -141,13 +141,6 @@ class ProductService implements ProductServiceInterface
      */
     public function forceDeleteProduct($id)
     {
-        $product = Product::withTrashed()->findOrFail($id);
-        // delete image file if exists
-        if ($product->image) {
-            // reuse service to delete file when forcing delete
-            $this->fileUploadService->deleteFile($product->image);
-        }
-
         $this->productRepository->forceDelete($id);
 
         // Invalidate caches
@@ -185,15 +178,8 @@ class ProductService implements ProductServiceInterface
         $product = $this->productRepository->findById($dto->id);
 
         DB::transaction(function () use ($dto, $product) {
-            foreach ($dto->images as $index => $image) {
+            foreach ($dto->images as $image) {
                 $path = $this->fileUploadService->uploadProductImage($image);
-
-                if ($index === 0) {
-                    $this->productRepository->update($product, [
-                        'image' => $path,
-                    ]);
-                }
-
                 $this->productRepository->createProductImage($product->id, $path);
             }
         });

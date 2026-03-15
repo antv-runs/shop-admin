@@ -22,7 +22,6 @@ class ProductApiRequest extends FormRequest
                 'compare_price' => 'nullable|numeric|gte:price',
                 'description' => 'nullable|string',
                 'category_id' => 'nullable|exists:categories,id',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ];
         }
 
@@ -33,7 +32,6 @@ class ProductApiRequest extends FormRequest
             'compare_price' => 'nullable|numeric|gte:price',
             'description' => 'nullable|string',
             'category_id' => 'nullable|exists:categories,id',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
     }
 }

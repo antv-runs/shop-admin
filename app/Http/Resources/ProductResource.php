@@ -18,20 +18,6 @@ class ProductResource extends JsonResource
             $discountPercent = (int) round((($originalPrice - $currentPrice) / $originalPrice) * 100);
         }
 
-        $images = $this->whenLoaded('images', function () {
-            return $this->images
-                ->pluck('image_url')
-                ->filter()
-                ->values()
-                ->all();
-        }, []);
-
-        $image = $this->image_url;
-
-        if (empty($images) && !empty($image)) {
-            $images = [$image];
-        }
-
         return [
             'id' => (string) $this->id,
             'name' => $this->name,
@@ -42,8 +28,8 @@ class ProductResource extends JsonResource
                 'original' => $originalPrice,
                 'discountPercent' => $discountPercent,
             ],
-            'image' => $image,
-            'images' => $images,
+            'thumbnail' => optional($this->primaryImage)->image_url,
+            'images' => ProductImageResource::collection($this->whenLoaded('images')),
             'category' => $this->whenLoaded('category', function () {
                 return [
                     'id' => (string) $this->category->id,

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Product extends Model
 {
@@ -23,29 +23,18 @@ class Product extends Model
     }
 
     /**
-     * Get the product's image URL.
-     *
-     * Generates a MinIO S3-compatible URL if the image is set,
-     * otherwise returns null.
-     */
-    public function getImageUrlAttribute()
-    {
-        if (!$this->image) {
-            return null;
-        }
-
-        if (filter_var($this->image, FILTER_VALIDATE_URL)) {
-            return $this->image;
-        }
-
-        return Storage::url($this->image);
-    }
-
-    /**
      * Get gallery images for the product.
      */
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+    }
+
+    /**
+     * Get the primary image for the product.
+     */
+    public function primaryImage(): HasOne
+    {
+        return $this->hasOne(ProductImage::class)->where('is_primary', true)->orderBy('sort_order');
     }
 }

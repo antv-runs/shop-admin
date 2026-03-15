@@ -42,7 +42,7 @@ class ExportProductsJob implements ShouldQueue
     {
         try {
             // Build the query with filters
-            $query = Product::with('category');
+            $query = Product::with(['category', 'primaryImage']);
 
             // Apply filters
             if (!empty($this->filters['search'])) {
@@ -60,9 +60,9 @@ class ExportProductsJob implements ShouldQueue
             // Handle status filter
             $status = $this->filters['status'] ?? 'active';
             if ($status === 'deleted') {
-                $query = Product::onlyTrashed();
+                $query = Product::onlyTrashed()->with(['category', 'primaryImage']);
             } elseif ($status === 'all') {
-                $query = Product::withTrashed();
+                $query = Product::withTrashed()->with(['category', 'primaryImage']);
             }
 
             // Get all matching products
@@ -178,7 +178,7 @@ class ExportProductsJob implements ShouldQueue
                 $product->price,
                 $product->category?->name ?? 'N/A',
                 $product->description,
-                $product->image ? $fileUploadService->getUrl($product->image) : 'N/A',
+                optional($product->primaryImage)->image_url ?? 'N/A',
                 $product->created_at->format('Y-m-d H:i:s'),
             ]);
         }
