@@ -38,16 +38,13 @@
     <thead>
     <tr>
         <th class="px-4 py-2 text-left">ID</th>
-        <th class="px-4 py-2 text-left">Image</th>
+        <th class="px-4 py-2 text-left">Primary Image</th>
         <th class="px-4 py-2 text-left">Name</th>
         <th class="px-4 py-2 text-left">Price</th>
+        <th class="px-4 py-2 text-left">Compare Price</th>
         <th class="px-4 py-2 text-left">Category</th>
-        <th class="px-4 py-2 text-left">Description</th>
-        @if(request('status') === \App\Enums\ItemStatus::DELETED->value)
-            <th class="px-4 py-2 text-left">Deleted At</th>
-        @else
-            <th class="px-4 py-2 text-left">Created</th>
-        @endif
+        <th class="px-4 py-2 text-left">Active</th>
+        <th class="px-4 py-2 text-left">Created</th>
         <th class="px-4 py-2 text-left">Actions</th>
     </tr>
     </thead>
@@ -56,9 +53,10 @@
     <tr class="border-t">
         <td class="px-4 py-2">{{ $product->id }}</td>
         <td class="px-4 py-2">
-            @if($product->image)
-                <a href="{{ $product->image_url }}" target="_blank">
-                    <img src="{{ $product->image_url }}" alt="img" class="h-12 w-12 object-cover rounded">
+            @php($primaryImageUrl = $product->primaryImage?->image_url)
+            @if($primaryImageUrl)
+                <a href="{{ Storage::url($primaryImageUrl) }}" target="_blank">
+                    <img src="{{ Storage::url($primaryImageUrl) }}" alt="img" class="h-12 w-12 object-cover rounded">
                 </a>
             @else
                 <span class="text-sm text-gray-500">—</span>
@@ -66,13 +64,16 @@
         </td>
         <td class="px-4 py-2">{{ $product->name }}</td>
         <td class="px-4 py-2">{{ number_format($product->price) }}</td>
+        <td class="px-4 py-2">{{ $product->compare_price !== null ? number_format($product->compare_price) : '—' }}</td>
         <td class="px-4 py-2">{{ $product->category?->name ?? 'No category' }}</td>
-        <td class="px-4 py-2">{{ $product->description }}</td>
-        @if(request('status') === \App\Enums\ItemStatus::DELETED->value)
-            <td class="px-4 py-2 text-sm text-gray-600">{{ $product->deleted_at?->format('M d, Y H:i') }}</td>
-        @else
-            <td class="px-4 py-2 text-sm text-gray-600">{{ $product->created_at?->format('M d, Y') }}</td>
-        @endif
+        <td class="px-4 py-2">
+            @if($product->is_active)
+                <span class="text-green-600 text-sm">Active</span>
+            @else
+                <span class="text-gray-500 text-sm">Inactive</span>
+            @endif
+        </td>
+        <td class="px-4 py-2 text-sm text-gray-600">{{ $product->created_at?->format('M d, Y') }}</td>
         <td class="px-4 py-2">
             @if(method_exists($product, 'trashed') && $product->trashed())
                 <form action="{{ route('admin.products.restore', $product->id) }}" method="POST" style="display:inline">

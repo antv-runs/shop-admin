@@ -19,9 +19,11 @@ class ProductRequest extends FormRequest
 
     public function authorize()
     {
-        $user = auth()->user();
+        $user = $this->user();
 
-        return $user !== null && $user->role === 'admin';
+        return $user !== null
+            && method_exists($user, 'isAdmin')
+            && $user->isAdmin();
     }
 
     public function rules()
@@ -32,6 +34,9 @@ class ProductRequest extends FormRequest
                 'price' => 'required|numeric|min:0',
                 'compare_price' => 'nullable|numeric|gte:price',
                 'description' => 'nullable|string',
+                'details' => 'nullable|string',
+                'currency' => 'required|string|size:3',
+                'is_active' => 'nullable|boolean',
                 'category_id' => 'nullable|exists:categories,id',
                 'images' => 'nullable|array',
                 'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
@@ -44,6 +49,9 @@ class ProductRequest extends FormRequest
             'price' => 'required|numeric|min:0',
             'compare_price' => 'nullable|numeric|gte:price',
             'description' => 'nullable|string',
+            'details' => 'nullable|string',
+            'currency' => 'required|string|size:3',
+            'is_active' => 'nullable|boolean',
             'category_id' => 'nullable|exists:categories,id',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
@@ -53,6 +61,7 @@ class ProductRequest extends FormRequest
     public function messages()
     {
         return [
+            'currency.size' => 'Currency must be a 3-letter ISO code (e.g. USD).',
             'images.array' => 'Images must be uploaded as an array.',
             'images.*.image' => 'Each selected file must be a valid image.',
             'images.*.mimes' => 'Each image must be a file of type: jpeg, png, jpg, webp.',

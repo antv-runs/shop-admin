@@ -47,8 +47,36 @@
             </div>
 
             <div>
+                <label class="block font-medium">Compare Price:</label>
+                <input type="text" name="compare_price" value="{{ old('compare_price') }}" class="mt-1 block w-full border rounded px-3 py-2">
+                @error('compare_price') <p class="text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
+                <label class="block font-medium">Currency:</label>
+                <input type="text" name="currency" value="{{ old('currency', 'USD') }}" maxlength="3" class="mt-1 block w-full border rounded px-3 py-2 uppercase">
+                @error('currency') <p class="text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
+                <label class="inline-flex items-center gap-2 font-medium">
+                    <input type="hidden" name="is_active" value="0">
+                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', 1) ? 'checked' : '' }}>
+                    Active
+                </label>
+                @error('is_active') <p class="text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
                 <label class="block font-medium">Description:</label>
                 <textarea name="description" class="mt-1 block w-full border rounded px-3 py-2">{{ old('description') }}</textarea>
+                @error('description') <p class="text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
+                <label class="block font-medium">Details:</label>
+                <textarea name="details" class="mt-1 block w-full border rounded px-3 py-2">{{ old('details') }}</textarea>
+                @error('details') <p class="text-red-600">{{ $message }}</p> @enderror
             </div>
 
             <div class="flex items-center gap-3">

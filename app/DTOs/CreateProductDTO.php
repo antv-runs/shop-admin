@@ -15,6 +15,9 @@ class CreateProductDTO
         public readonly float $price,
         public readonly ?float $compare_price = null,
         public readonly ?string $description = null,
+        public readonly ?string $details = null,
+        public readonly string $currency = 'USD',
+        public readonly bool $is_active = true,
         public readonly ?int $category_id = null,
     ) {}
 
@@ -28,6 +31,9 @@ class CreateProductDTO
             price: (float) $data['price'],
             compare_price: isset($data['compare_price']) ? (float) $data['compare_price'] : null,
             description: $data['description'] ?? null,
+            details: $data['details'] ?? null,
+            currency: strtoupper((string) ($data['currency'] ?? 'USD')),
+            is_active: isset($data['is_active']) ? (bool) $data['is_active'] : true,
             category_id: $data['category_id'] ?? null,
         );
     }
@@ -42,6 +48,9 @@ class CreateProductDTO
             'price' => $this->price,
             'compare_price' => $this->compare_price,
             'description' => $this->description,
+            'details' => $this->details,
+            'currency' => $this->currency,
+            'is_active' => $this->is_active,
             'category_id' => $this->category_id,
         ];
     }
