@@ -65,4 +65,24 @@ interface ProductRepositoryInterface
      * Create a gallery image record for product
      */
     public function createProductImage($productId, $path, bool $isPrimary = false);
+
+    /**
+     * Set product primary image by image id.
+     */
+    public function setPrimaryProductImage(int $productId, int $imageId): void;
+
+    /**
+     * Move product image left by swapping sort order.
+     */
+    public function moveProductImageLeft(int $productId, int $imageId): void;
+
+    /**
+     * Move product image right by swapping sort order.
+     */
+    public function moveProductImageRight(int $productId, int $imageId): void;
+
+    /**
+     * Delete product image and keep primary image consistent.
+     */
+    public function deleteProductImage(int $productId, int $imageId): void;
 }

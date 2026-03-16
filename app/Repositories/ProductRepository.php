@@ -6,6 +6,7 @@ use App\Contracts\Repositories\ProductRepositoryInterface;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\DTOs\ProductFilterDTO;
+use Illuminate\Support\Facades\DB;
 
 class ProductRepository implements ProductRepositoryInterface
 {
@@ -157,5 +158,118 @@ class ProductRepository implements ProductRepositoryInterface
             'sort_order' => $nextSortOrder,
             'is_primary' => $isPrimary,
         ]);
+    }
+
+    /**
+     * Set product primary image by image id.
+     */
+    public function setPrimaryProductImage(int $productId, int $imageId): void
+    {
+        DB::transaction(function () use ($productId, $imageId) {
+            $image = ProductImage::query()
+                ->where('product_id', $productId)
+                ->findOrFail($imageId);
+
+            ProductImage::query()
+                ->where('product_id', $productId)
+                ->update(['is_primary' => false]);
+
+            $image->update(['is_primary' => true]);
+        });
+    }
+
+    /**
+     * Move product image left by swapping sort order.
+     */
+    public function moveProductImageLeft(int $productId, int $imageId): void
+    {
+        DB::transaction(function () use ($productId, $imageId) {
+            $current = ProductImage::query()
+                ->where('product_id', $productId)
+                ->findOrFail($imageId);
+
+            $leftNeighbor = ProductImage::query()
+                ->where('product_id', $productId)
+                ->where(function ($query) use ($current) {
+                    $query->where('sort_order', '<', $current->sort_order)
+                        ->orWhere(function ($subQuery) use ($current) {
+                            $subQuery->where('sort_order', $current->sort_order)
+                                ->where('id', '<', $current->id);
+                        });
+                })
+                ->orderByDesc('sort_order')
+                ->orderByDesc('id')
+                ->first();
+
+            if (!$leftNeighbor) {
+                return;
+            }
+
+            $currentSort = $current->sort_order;
+            $current->update(['sort_order' => $leftNeighbor->sort_order]);
+            $leftNeighbor->update(['sort_order' => $currentSort]);
+        });
+    }
+
+    /**
+     * Move product image right by swapping sort order.
+     */
+    public function moveProductImageRight(int $productId, int $imageId): void
+    {
+        DB::transaction(function () use ($productId, $imageId) {
+            $current = ProductImage::query()
+                ->where('product_id', $productId)
+                ->findOrFail($imageId);
+
+            $rightNeighbor = ProductImage::query()
+                ->where('product_id', $productId)
+                ->where(function ($query) use ($current) {
+                    $query->where('sort_order', '>', $current->sort_order)
+                        ->orWhere(function ($subQuery) use ($current) {
+                            $subQuery->where('sort_order', $current->sort_order)
+                                ->where('id', '>', $current->id);
+                        });
+                })
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->first();
+
+            if (!$rightNeighbor) {
+                return;
+            }
+
+            $currentSort = $current->sort_order;
+            $current->update(['sort_order' => $rightNeighbor->sort_order]);
+            $rightNeighbor->update(['sort_order' => $currentSort]);
+        });
+    }
+
+    /**
+     * Delete product image and keep primary image consistent.
+     */
+    public function deleteProductImage(int $productId, int $imageId): void
+    {
+        DB::transaction(function () use ($productId, $imageId) {
+            $image = ProductImage::query()
+                ->where('product_id', $productId)
+                ->findOrFail($imageId);
+
+            $wasPrimary = (bool) $image->is_primary;
+            $image->delete();
+
+            if (!$wasPrimary) {
+                return;
+            }
+
+            $nextPrimary = ProductImage::query()
+                ->where('product_id', $productId)
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->first();
+
+            if ($nextPrimary) {
+                $nextPrimary->update(['is_primary' => true]);
+            }
+        });
     }
 }

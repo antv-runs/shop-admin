@@ -66,6 +66,30 @@ class ProductController extends Controller
     public function update(ProductRequest $request, $id)
     {
         $product = $this->productService->getProduct($id);
+        $imageAction = $request->input('image_action');
+        $imageId = (int) $request->input('image_id', 0);
+
+        if (!empty($imageAction) && $imageId > 0) {
+            switch ($imageAction) {
+                case 'set_primary':
+                    $this->productService->setPrimaryProductImage((int) $product->id, $imageId);
+                    return redirect()->route('admin.products.edit', $product->id)
+                        ->with('success', 'Primary image updated successfully');
+                case 'move_left':
+                    $this->productService->moveProductImageLeft((int) $product->id, $imageId);
+                    return redirect()->route('admin.products.edit', $product->id)
+                        ->with('success', 'Image moved left successfully');
+                case 'move_right':
+                    $this->productService->moveProductImageRight((int) $product->id, $imageId);
+                    return redirect()->route('admin.products.edit', $product->id)
+                        ->with('success', 'Image moved right successfully');
+                case 'delete_image':
+                    $this->productService->deleteProductImage((int) $product->id, $imageId);
+                    return redirect()->route('admin.products.edit', $product->id)
+                        ->with('success', 'Image deleted successfully');
+            }
+        }
+
         $validated = $request->validated();
 
         // Create DTO from validated data

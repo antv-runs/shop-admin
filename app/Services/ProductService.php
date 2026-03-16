@@ -198,6 +198,50 @@ class ProductService implements ProductServiceInterface
     }
 
     /**
+     * Set a gallery image as primary for a product.
+     */
+    public function setPrimaryProductImage(int $productId, int $imageId): void
+    {
+        $this->productRepository->setPrimaryProductImage($productId, $imageId);
+
+        CacheHelper::forget(CacheKey::productDetail($productId));
+        $this->invalidateProductListCache();
+    }
+
+    /**
+     * Move gallery image left.
+     */
+    public function moveProductImageLeft(int $productId, int $imageId): void
+    {
+        $this->productRepository->moveProductImageLeft($productId, $imageId);
+
+        CacheHelper::forget(CacheKey::productDetail($productId));
+        $this->invalidateProductListCache();
+    }
+
+    /**
+     * Move gallery image right.
+     */
+    public function moveProductImageRight(int $productId, int $imageId): void
+    {
+        $this->productRepository->moveProductImageRight($productId, $imageId);
+
+        CacheHelper::forget(CacheKey::productDetail($productId));
+        $this->invalidateProductListCache();
+    }
+
+    /**
+     * Delete gallery image.
+     */
+    public function deleteProductImage(int $productId, int $imageId): void
+    {
+        $this->productRepository->deleteProductImage($productId, $imageId);
+
+        CacheHelper::forget(CacheKey::productDetail($productId));
+        $this->invalidateProductListCache();
+    }
+
+    /**
      * Find a storefront product by slug
      */
     public function findProductBySlugForStore(string $slug)

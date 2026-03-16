@@ -91,16 +91,93 @@
                                 <div class="border rounded p-3">
                                     <img src="{{ Storage::url($image->image_url) }}" alt="Product Image {{ $image->id }}" class="h-28 w-full object-cover rounded">
                                     <div class="mt-2 text-sm text-gray-700">Image ID: {{ $image->id }}</div>
-                                    <div class="text-sm">
+                                    <div class="mt-1 text-sm">
                                         @if($image->is_primary)
                                             <span class="text-green-600 font-medium">Primary</span>
                                         @else
                                             <span class="text-gray-500">Secondary</span>
                                         @endif
                                     </div>
-                                    <button type="button" class="mt-2 px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded cursor-not-allowed" disabled>
-                                        Delete (Coming Soon)
-                                    </button>
+
+                                    <div class="mt-3 flex flex-wrap gap-2">
+                                        @if(!$image->is_primary)
+                                            <form action="{{ route('admin.products.update', $product->id) }}" method="POST">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="name" value="{{ $product->name }}">
+                                                <input type="hidden" name="price" value="{{ $product->price }}">
+                                                <input type="hidden" name="compare_price" value="{{ $product->compare_price }}">
+                                                <input type="hidden" name="description" value="{{ $product->description }}">
+                                                <input type="hidden" name="details" value="{{ $product->details }}">
+                                                <input type="hidden" name="category_id" value="{{ $product->category_id }}">
+                                                <input type="hidden" name="currency" value="{{ $product->currency ?? 'USD' }}">
+                                                <input type="hidden" name="is_active" value="{{ $product->is_active ? 1 : 0 }}">
+                                                <input type="hidden" name="image_action" value="set_primary">
+                                                <input type="hidden" name="image_id" value="{{ $image->id }}">
+                                                <button type="submit" class="px-3 py-1 text-sm bg-indigo-600 text-white rounded">
+                                                    Set Primary
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        @if(!$loop->first)
+                                            <form action="{{ route('admin.products.update', $product->id) }}" method="POST">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="name" value="{{ $product->name }}">
+                                                <input type="hidden" name="price" value="{{ $product->price }}">
+                                                <input type="hidden" name="compare_price" value="{{ $product->compare_price }}">
+                                                <input type="hidden" name="description" value="{{ $product->description }}">
+                                                <input type="hidden" name="details" value="{{ $product->details }}">
+                                                <input type="hidden" name="category_id" value="{{ $product->category_id }}">
+                                                <input type="hidden" name="currency" value="{{ $product->currency ?? 'USD' }}">
+                                                <input type="hidden" name="is_active" value="{{ $product->is_active ? 1 : 0 }}">
+                                                <input type="hidden" name="image_action" value="move_left">
+                                                <input type="hidden" name="image_id" value="{{ $image->id }}">
+                                                <button type="submit" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded">
+                                                    <- Move Left
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        @if(!$loop->last)
+                                            <form action="{{ route('admin.products.update', $product->id) }}" method="POST">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="name" value="{{ $product->name }}">
+                                                <input type="hidden" name="price" value="{{ $product->price }}">
+                                                <input type="hidden" name="compare_price" value="{{ $product->compare_price }}">
+                                                <input type="hidden" name="description" value="{{ $product->description }}">
+                                                <input type="hidden" name="details" value="{{ $product->details }}">
+                                                <input type="hidden" name="category_id" value="{{ $product->category_id }}">
+                                                <input type="hidden" name="currency" value="{{ $product->currency ?? 'USD' }}">
+                                                <input type="hidden" name="is_active" value="{{ $product->is_active ? 1 : 0 }}">
+                                                <input type="hidden" name="image_action" value="move_right">
+                                                <input type="hidden" name="image_id" value="{{ $image->id }}">
+                                                <button type="submit" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded">
+                                                    Move Right ->
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        <form action="{{ route('admin.products.update', $product->id) }}" method="POST" onsubmit="return confirm('Delete this image?')">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="name" value="{{ $product->name }}">
+                                            <input type="hidden" name="price" value="{{ $product->price }}">
+                                            <input type="hidden" name="compare_price" value="{{ $product->compare_price }}">
+                                            <input type="hidden" name="description" value="{{ $product->description }}">
+                                            <input type="hidden" name="details" value="{{ $product->details }}">
+                                            <input type="hidden" name="category_id" value="{{ $product->category_id }}">
+                                            <input type="hidden" name="currency" value="{{ $product->currency ?? 'USD' }}">
+                                            <input type="hidden" name="is_active" value="{{ $product->is_active ? 1 : 0 }}">
+                                            <input type="hidden" name="image_action" value="delete_image">
+                                            <input type="hidden" name="image_id" value="{{ $image->id }}">
+                                            <button type="submit" class="px-3 py-1 text-sm bg-red-600 text-white rounded">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             @endforeach
                         </div>

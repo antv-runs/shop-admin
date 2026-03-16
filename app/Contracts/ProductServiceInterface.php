@@ -66,6 +66,26 @@ interface ProductServiceInterface
     public function uploadProductImage(UploadImageDTO $dto);
 
     /**
+     * Set a gallery image as primary for a product.
+     */
+    public function setPrimaryProductImage(int $productId, int $imageId): void;
+
+    /**
+     * Move a gallery image left (towards lower sort order).
+     */
+    public function moveProductImageLeft(int $productId, int $imageId): void;
+
+    /**
+     * Move a gallery image right (towards higher sort order).
+     */
+    public function moveProductImageRight(int $productId, int $imageId): void;
+
+    /**
+     * Delete a gallery image for a product.
+     */
+    public function deleteProductImage(int $productId, int $imageId): void;
+
+    /**
      * Find storefront product by slug
      */
     public function findProductBySlugForStore(string $slug);
