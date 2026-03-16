@@ -75,7 +75,7 @@ class ProductController extends BaseController
      *     summary="Create new product",
     *     description="Create a new product (Admin only). Validation: name required max:255, price required numeric min:0, category_id nullable exists:categories,id",
      *     tags={"Products"},
-     *     security={{"bearerAuth":{}}},p
+     *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         description="Product data per ProductRequest validation",
