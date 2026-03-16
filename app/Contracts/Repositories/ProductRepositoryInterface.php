@@ -64,5 +64,5 @@ interface ProductRepositoryInterface
     /**
      * Create a gallery image record for product
      */
-    public function createProductImage($productId, $path);
+    public function createProductImage($productId, $path, bool $isPrimary = false);
 }

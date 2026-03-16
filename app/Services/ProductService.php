@@ -176,11 +176,17 @@ class ProductService implements ProductServiceInterface
     public function uploadProductImage(UploadImageDTO $dto): Product
     {
         $product = $this->productRepository->findById($dto->id);
+        $hasPrimaryImage = $product->primaryImage !== null;
+        $shouldSetFirstUploadedAsPrimary = !$hasPrimaryImage;
+        $isFirstUploadedImage = true;
 
-        DB::transaction(function () use ($dto, $product) {
+        DB::transaction(function () use ($dto, $product, $shouldSetFirstUploadedAsPrimary, &$isFirstUploadedImage) {
             foreach ($dto->images as $image) {
                 $path = $this->fileUploadService->uploadProductImage($image);
-                $this->productRepository->createProductImage($product->id, $path);
+                $isPrimary = $shouldSetFirstUploadedAsPrimary && $isFirstUploadedImage;
+
+                $this->productRepository->createProductImage($product->id, $path, $isPrimary);
+                $isFirstUploadedImage = false;
             }
         });
 

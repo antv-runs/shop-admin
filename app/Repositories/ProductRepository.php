@@ -145,7 +145,7 @@ class ProductRepository implements ProductRepositoryInterface
     /**
      * Create gallery image record for product
      */
-    public function createProductImage($productId, $path)
+    public function createProductImage($productId, $path, bool $isPrimary = false)
     {
         $nextSortOrder = (int) ProductImage::query()
             ->where('product_id', $productId)
@@ -155,7 +155,7 @@ class ProductRepository implements ProductRepositoryInterface
             'product_id' => $productId,
             'image_url' => $path,
             'sort_order' => $nextSortOrder,
-            'is_primary' => false,
+            'is_primary' => $isPrimary,
         ]);
     }
 }
