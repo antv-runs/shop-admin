@@ -78,13 +78,21 @@ class OrderController extends BaseController
      * @OA\Post(
      *     path="/api/orders",
      *     summary="Create a new order",
-     *     description="Create a new order for authenticated user with items array. Requires items array with min:1, each item requires product_id (must exist) and quantity (min:1)",
+      *     description="Create a new order for guest or authenticated user with customer information and items array.",
      *     tags={"Orders"},
-     *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"items"},
+      *             required={"customer", "items"},
+      *             @OA\Property(
+      *                 property="customer",
+      *                 type="object",
+      *                 required={"name", "email", "phone", "address"},
+      *                 @OA\Property(property="name", type="string", example="John Doe"),
+      *                 @OA\Property(property="email", type="string", format="email", example="john@email.com"),
+      *                 @OA\Property(property="phone", type="string", example="0123456789"),
+      *                 @OA\Property(property="address", type="string", example="Ho Chi Minh City")
+      *             ),
      *             @OA\Property(
      *                 property="items",
      *                 type="array",
@@ -118,9 +126,18 @@ class OrderController extends BaseController
     public function store(OrderRequest $request)
     {
         $data = $request->validated();
-        $data['user_id'] = auth()->id();
+        $customer = $data['customer'];
 
-        $dto = CreateOrderDTO::fromArray($data);
+        $payload = [
+            'name' => $customer['name'],
+            'email' => $customer['email'],
+            'phone' => $customer['phone'],
+            'address' => $customer['address'],
+            'items' => $data['items'],
+        ];
+        $payload['user_id'] = auth('sanctum')->id();
+
+        $dto = CreateOrderDTO::fromArray($payload);
         $order = $this->orderService->createOrder($dto);
 
         // dispatch a queued job to send confirmation email after the transaction commits

@@ -43,6 +43,10 @@ class OrderRepository implements OrderRepositoryInterface
 
             $order = Order::create([
                 'user_id' => $userId,
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'],
+                'address' => $data['address'],
                 'total_amount' => $totalAmount,
             ]);
 

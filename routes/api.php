@@ -41,6 +41,9 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
     Route::get('/{id}', 'show')->where('id', '[0-9]+');
 });
 
+// Orders (guest checkout supported)
+Route::post('/orders', [OrderController::class, 'store']);
+
 // ==========================
 // Protected Routes
 // ==========================
@@ -62,7 +65,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('orders')->controller(OrderController::class)->group(function () {
         Route::get('/', 'index');
         Route::get('/{id}', 'show');
-        Route::post('/', 'store');
     });
 
     // ==========================

@@ -286,8 +286,14 @@ class DatabaseSeeder extends Seeder
 
         for ($i = 0; $i < $remaining; $i++) {
             DB::transaction(function () use ($users, $products) {
+                $user = $users->random();
+
                 $order = Order::create([
-                    'user_id' => $users->random()->id,
+                    'user_id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => '0123456789',
+                    'address' => 'Seeded Address',
                     'total_amount' => 0,
                     'status' => Arr::random(['pending', 'processing', 'completed']),
                 ]);

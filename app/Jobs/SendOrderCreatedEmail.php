@@ -33,21 +33,23 @@ class SendOrderCreatedEmail implements ShouldQueue
     public function handle()
     {
         $user = $this->order->user;
+        $recipientEmail = $this->order->email ?: optional($user)->email;
 
-        if (! $user || ! $user->email) {
-            Log::warning('Order email not sent: suer or email missing', [
+        if (! $recipientEmail) {
+            Log::warning('Order email not sent: recipient email missing', [
                 'order_id' => $this->order->id,
             ]);
 
             return;
         }
 
-        Mail::to($user->email)
+        Mail::to($recipientEmail)
             ->send(new OrderCreated($this->order));
 
         Log::info('Order created email sent successfully', [
             'order_id' => $this->order->id,
-            'user_id' => $user->id,
+            'user_id' => optional($user)->id,
+            'recipient_email' => $recipientEmail,
         ]);
     }
 

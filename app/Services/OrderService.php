@@ -34,8 +34,10 @@ class OrderService implements OrderServiceInterface
 
         $result = $this->orderRepository->create($data);
 
-        // Invalidate user's order list cache
-        CacheHelper::forget(CacheKey::userOrdersList($userId, 15));
+        // Invalidate user's order list cache only for authenticated orders.
+        if ($userId !== null) {
+            CacheHelper::forget(CacheKey::userOrdersList($userId, 15));
+        }
 
         return $result;
     }

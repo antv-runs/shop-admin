@@ -11,11 +11,19 @@ namespace App\DTOs;
 class CreateOrderDTO
 {
     /**
-     * @param int $userId
+     * @param int|null $userId
+     * @param string $name
+     * @param string $email
+     * @param string $phone
+     * @param string $address
      * @param array<array{product_id: int, quantity: int}> $items
      */
     public function __construct(
-        public readonly int $userId,
+        public readonly ?int $userId,
+        public readonly string $name,
+        public readonly string $email,
+        public readonly string $phone,
+        public readonly string $address,
         public readonly array $items,
     ) {}
 
@@ -25,7 +33,11 @@ class CreateOrderDTO
     public static function fromArray(array $data): self
     {
         return new self(
-            userId: $data['user_id'],
+            userId: $data['user_id'] ?? null,
+            name: $data['name'],
+            email: $data['email'],
+            phone: $data['phone'],
+            address: $data['address'],
             items: $data['items'],
         );
     }
@@ -37,6 +49,10 @@ class CreateOrderDTO
     {
         return [
             'user_id' => $this->userId,
+            'name' => $this->name,
+            'email' => $this->email,
+            'phone' => $this->phone,
+            'address' => $this->address,
             'items' => $this->items,
         ];
     }
