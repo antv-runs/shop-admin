@@ -1029,30 +1029,35 @@
                     "Products"
                 ],
                 "summary": "Get storefront products",
-                "description": "Retrieve paginated storefront products for product listing",
+                "description": "Retrieve paginated storefront products. Supports filtering by keyword, category, status, and price range. All filter parameters are optional and combinable.",
                 "operationId": "d97d1c3727cbac49708b85f7d11f7d58",
                 "parameters": [
                     {
                         "name": "search",
                         "in": "query",
-                        "description": "Search by product name",
+                        "description": "Search products by name (partial match)",
+                        "required": false,
                         "schema": {
                             "type": "string",
-                            "maxLength": 255
+                            "maxLength": 255,
+                            "example": "t-shirt"
                         }
                     },
                     {
                         "name": "category_id",
                         "in": "query",
-                        "description": "Filter by category ID",
+                        "description": "Filter by category ID (must exist in categories table)",
+                        "required": false,
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "example": 3
                         }
                     },
                     {
                         "name": "status",
                         "in": "query",
-                        "description": "Filter by status",
+                        "description": "Filter by product status. 'trashed' is an alias for 'deleted'.",
+                        "required": false,
                         "schema": {
                             "type": "string",
                             "enum": [
@@ -1060,28 +1065,57 @@
                                 "deleted",
                                 "all",
                                 "trashed"
-                            ]
+                            ],
+                            "example": "active"
+                        }
+                    },
+                    {
+                        "name": "min_price",
+                        "in": "query",
+                        "description": "Minimum price filter (inclusive). Must be >= 0. If both min_price and max_price are provided, min_price must be <= max_price.",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "minimum": 0,
+                            "example": 50
+                        }
+                    },
+                    {
+                        "name": "max_price",
+                        "in": "query",
+                        "description": "Maximum price filter (inclusive). Must be >= 0 and >= min_price when both are provided.",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "minimum": 0,
+                            "example": 200
                         }
                     },
                     {
                         "name": "page",
                         "in": "query",
-                        "description": "Page number",
+                        "description": "Page number for pagination",
+                        "required": false,
                         "schema": {
                             "type": "integer",
                             "default": 1,
-                            "minimum": 1
+                            "minimum": 1,
+                            "example": 1
                         }
                     },
                     {
                         "name": "per_page",
                         "in": "query",
-                        "description": "Items per page",
+                        "description": "Number of items per page",
+                        "required": false,
                         "schema": {
                             "type": "integer",
                             "default": 15,
                             "maximum": 100,
-                            "minimum": 1
+                            "minimum": 1,
+                            "example": 15
                         }
                     }
                 ],
@@ -1103,8 +1137,102 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/Product"
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "1"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Basic T-Shirt"
+                                                    },
+                                                    "slug": {
+                                                        "type": "string",
+                                                        "example": "basic-t-shirt"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "A comfortable everyday tee.",
+                                                        "nullable": true
+                                                    },
+                                                    "pricing": {
+                                                        "properties": {
+                                                            "currency": {
+                                                                "type": "string",
+                                                                "example": "USD"
+                                                            },
+                                                            "current": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 29.99
+                                                            },
+                                                            "original": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 49.99
+                                                            },
+                                                            "discountPercent": {
+                                                                "type": "integer",
+                                                                "example": 40,
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "thumbnail": {
+                                                        "type": "string",
+                                                        "example": "https://cdn.example.com/products/tshirt.jpg",
+                                                        "nullable": true
+                                                    },
+                                                    "images": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "$ref": "#/components/schemas/ProductImage"
+                                                        }
+                                                    },
+                                                    "category": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "3"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "T-Shirts"
+                                                            },
+                                                            "slug": {
+                                                                "type": "string",
+                                                                "example": "t-shirts"
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
                                             }
+                                        },
+                                        "meta": {
+                                            "description": "Pagination metadata",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 72
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -2487,6 +2615,33 @@
     },
     "components": {
         "schemas": {
+            "ProductImage": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "1"
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "https://cdn.example.com/products/image.jpg",
+                        "nullable": true
+                    },
+                    "is_primary": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "sort_order": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "alt_text": {
+                        "type": "string",
+                        "example": "Front view of product",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "SuccessResponse": {
                 "properties": {
                     "success": {

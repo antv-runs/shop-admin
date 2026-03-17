@@ -38,6 +38,14 @@ class ProductRepository implements ProductRepositoryInterface
             $query->where('category_id', $filter->categoryId);
         }
 
+        if ($filter->priceMin !== null) {
+            $query->where('price', '>=', $filter->priceMin);
+        }
+
+        if ($filter->priceMax !== null) {
+            $query->where('price', '<=', $filter->priceMax);
+        }
+
         return $query->paginate($filter->perPage, ['*'], 'page', $filter->page);
     }
 

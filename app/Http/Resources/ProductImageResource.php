@@ -5,6 +5,17 @@ namespace App\Http\Resources;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * @OA\Schema(
+ *     schema="ProductImage",
+ *     type="object",
+ *     @OA\Property(property="id", type="string", example="1"),
+ *     @OA\Property(property="image_url", type="string", nullable=true, example="https://cdn.example.com/products/image.jpg"),
+ *     @OA\Property(property="is_primary", type="boolean", example=true),
+ *     @OA\Property(property="sort_order", type="integer", example=0),
+ *     @OA\Property(property="alt_text", type="string", nullable=true, example="Front view of product")
+ * )
+ */
 class ProductImageResource extends JsonResource
 {
     public function toArray($request)

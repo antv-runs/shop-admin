@@ -35,13 +35,59 @@ class ProductController extends BaseController
      * @OA\Get(
      *     path="/api/products",
      *     summary="Get storefront products",
-     *     description="Retrieve paginated storefront products for product listing",
+     *     description="Retrieve paginated storefront products. Supports filtering by keyword, category, status, and price range. All filter parameters are optional and combinable.",
      *     tags={"Products"},
-     *     @OA\Parameter(name="search", in="query", description="Search by product name", @OA\Schema(type="string", maxLength=255)),
-     *     @OA\Parameter(name="category_id", in="query", description="Filter by category ID", @OA\Schema(type="integer")),
-     *     @OA\Parameter(name="status", in="query", description="Filter by status", @OA\Schema(type="string", enum={"active", "deleted", "all", "trashed"})),
-     *     @OA\Parameter(name="page", in="query", description="Page number", @OA\Schema(type="integer", minimum=1, default=1)),
-     *     @OA\Parameter(name="per_page", in="query", description="Items per page", @OA\Schema(type="integer", minimum=1, maximum=100, default=15)),
+     *
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Search products by name (partial match)",
+     *         required=false,
+     *         @OA\Schema(type="string", maxLength=255, example="t-shirt")
+     *     ),
+     *     @OA\Parameter(
+     *         name="category_id",
+     *         in="query",
+     *         description="Filter by category ID (must exist in categories table)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=3)
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filter by product status. 'trashed' is an alias for 'deleted'.",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"active", "deleted", "all", "trashed"}, example="active")
+     *     ),
+     *     @OA\Parameter(
+     *         name="min_price",
+     *         in="query",
+     *         description="Minimum price filter (inclusive). Must be >= 0. If both min_price and max_price are provided, min_price must be <= max_price.",
+     *         required=false,
+     *         @OA\Schema(type="number", format="float", minimum=0, example=50)
+     *     ),
+     *     @OA\Parameter(
+     *         name="max_price",
+     *         in="query",
+     *         description="Maximum price filter (inclusive). Must be >= 0 and >= min_price when both are provided.",
+     *         required=false,
+     *         @OA\Schema(type="number", format="float", minimum=0, example=200)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number for pagination",
+     *         required=false,
+     *         @OA\Schema(type="integer", minimum=1, default=1, example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of items per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", minimum=1, maximum=100, default=15, example=15)
+     *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Products retrieved successfully",
@@ -51,7 +97,44 @@ class ProductController extends BaseController
      *             @OA\Property(
      *                 property="data",
      *                 type="array",
-     *                 @OA\Items(ref="#/components/schemas/Product")
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="string", example="1"),
+     *                     @OA\Property(property="name", type="string", example="Basic T-Shirt"),
+     *                     @OA\Property(property="slug", type="string", example="basic-t-shirt"),
+     *                     @OA\Property(property="description", type="string", nullable=true, example="A comfortable everyday tee."),
+     *                     @OA\Property(
+     *                         property="pricing",
+     *                         type="object",
+     *                         @OA\Property(property="currency", type="string", example="USD"),
+     *                         @OA\Property(property="current", type="number", format="float", example=29.99),
+     *                         @OA\Property(property="original", type="number", format="float", example=49.99),
+     *                         @OA\Property(property="discountPercent", type="integer", nullable=true, example=40)
+     *                     ),
+     *                     @OA\Property(property="thumbnail", type="string", nullable=true, example="https://cdn.example.com/products/tshirt.jpg"),
+     *                     @OA\Property(
+     *                         property="images",
+     *                         type="array",
+     *                         @OA\Items(ref="#/components/schemas/ProductImage")
+     *                     ),
+     *                     @OA\Property(
+     *                         property="category",
+     *                         type="object",
+     *                         nullable=true,
+     *                         @OA\Property(property="id", type="string", example="3"),
+     *                         @OA\Property(property="name", type="string", example="T-Shirts"),
+     *                         @OA\Property(property="slug", type="string", example="t-shirts")
+     *                     )
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="meta",
+     *                 type="object",
+     *                 description="Pagination metadata",
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="last_page", type="integer", example=5),
+     *                 @OA\Property(property="per_page", type="integer", example=15),
+     *                 @OA\Property(property="total", type="integer", example=72)
      *             )
      *         )
      *     ),
