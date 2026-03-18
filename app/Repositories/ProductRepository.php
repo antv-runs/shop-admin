@@ -46,6 +46,22 @@ class ProductRepository implements ProductRepositoryInterface
             $query->where('price', '<=', $filter->priceMax);
         }
 
+        if ($filter->colors) {
+            $query->where(function ($q) use ($filter) {
+                foreach ($filter->colors as $color) {
+                    $q->orWhereJsonContains('colors', $color);
+                }
+            });
+        }
+
+        if ($filter->sizes) {
+            $query->where(function ($q) use ($filter) {
+                foreach ($filter->sizes as $size) {
+                    $q->orWhereJsonContains('sizes', $size);
+                }
+            });
+        }
+
         return $query->paginate($filter->perPage, ['*'], 'page', $filter->page);
     }
 

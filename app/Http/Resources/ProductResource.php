@@ -30,6 +30,16 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
+            'variants' => [
+                'colors' => collect($this->colors ?? [])
+                    ->map(fn($c) => ['id' => $c, 'label' => ucfirst($c)])
+                    ->values()
+                    ->all(),
+                'sizes' => collect($this->sizes ?? [])
+                    ->map(fn($s) => ['id' => $s, 'label' => $s])
+                    ->values()
+                    ->all(),
+            ],
             'pricing' => [
                 'currency' => $this->currency ?? 'USD',
                 'current' => $currentPrice,

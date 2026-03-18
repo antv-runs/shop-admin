@@ -19,6 +19,8 @@ class ProductIndexRequest extends FormRequest
             'status' => 'nullable|string|in:active,deleted,all,trashed',
             'min_price' => 'nullable|numeric|min:0',
             'max_price' => 'nullable|numeric|min:0',
+            'colors' => 'nullable|string',
+            'sizes' => 'nullable|string',
             'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:1|max:100',
         ];

@@ -19,12 +19,16 @@ class Product extends Model
         'compare_price',
         'description',
         'details',
+        'colors',
+        'sizes',
         'currency',
         'is_active',
         'category_id',
     ];
 
     protected $casts = [
+        'colors' => 'array',
+        'sizes' => 'array',
         'is_active' => 'boolean',
     ];
 

@@ -21,6 +21,10 @@ class ProductApiRequest extends FormRequest
                 'price' => 'required|numeric|min:0',
                 'compare_price' => 'nullable|numeric|gte:price',
                 'description' => 'nullable|string',
+                'colors' => 'nullable|array',
+                'colors.*' => 'string|max:50',
+                'sizes' => 'nullable|array',
+                'sizes.*' => 'string|max:50',
                 'category_id' => 'nullable|exists:categories,id',
             ];
         }
@@ -31,6 +35,10 @@ class ProductApiRequest extends FormRequest
             'price' => 'required|numeric|min:0',
             'compare_price' => 'nullable|numeric|gte:price',
             'description' => 'nullable|string',
+            'colors' => 'nullable|array',
+            'colors.*' => 'string|max:50',
+            'sizes' => 'nullable|array',
+            'sizes.*' => 'string|max:50',
             'category_id' => 'nullable|exists:categories,id',
         ];
     }

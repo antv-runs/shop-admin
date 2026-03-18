@@ -137,6 +137,9 @@ class DatabaseSeeder extends Seeder
             return;
         }
 
+        $colorPool = ['white', 'black', 'red', 'blue', 'green', 'gray', 'navy', 'beige'];
+        $sizePool  = ['X-Small', 'Small', 'Medium', 'Large', 'X-Large'];
+
         $categoryBySlug = $categories->keyBy('slug');
 
         $resolveCategoryId = function (array $preferredSlugs) use ($categoryBySlug, $categories) {
@@ -156,48 +159,64 @@ class DatabaseSeeder extends Seeder
                 'compare_price' => 300,
                 'description' => 'Graphic cotton t-shirt inspired by the featured product detail page.',
                 'category_slugs' => ['t-shirts', 'casual', 'shop'],
+                'colors' => ['white', 'black', 'red', 'blue', 'gray'],
+                'sizes' => ['Small', 'Medium', 'Large', 'X-Large'],
             ],
             [
                 'name' => 'Polo with Contrast Trims',
                 'price' => 212,
                 'description' => 'Classic polo with contrast details from the cart and product list UI.',
                 'category_slugs' => ['polo-shirts', 'casual', 'shop'],
+                'colors' => ['white', 'black', 'navy', 'beige'],
+                'sizes' => ['Small', 'Medium', 'Large', 'X-Large'],
             ],
             [
                 'name' => 'Gradient Graphic T-shirt',
                 'price' => 145,
                 'description' => 'Gradient print t-shirt highlighted in catalog and cart views.',
                 'category_slugs' => ['t-shirts', 'casual', 'shop'],
+                'colors' => ['white', 'black', 'red'],
+                'sizes' => ['Small', 'Medium', 'Large', 'X-Large'],
             ],
             [
                 'name' => 'Polo with Tipping Details',
                 'price' => 180,
                 'description' => 'Minimal tipping-detail polo showcased in the catalog grid.',
                 'category_slugs' => ['polo-shirts', 'casual', 'shop'],
+                'colors' => ['black', 'navy', 'gray', 'beige'],
+                'sizes' => ['Small', 'Medium', 'Large', 'X-Large'],
             ],
             [
                 'name' => 'Black Striped T-shirt',
                 'price' => 120,
                 'description' => 'Black striped tee featured across catalog and cart with promo price.',
                 'category_slugs' => ['t-shirts', 'casual', 'on-sale'],
+                'colors' => ['black', 'white', 'gray'],
+                'sizes' => ['Small', 'Medium', 'Large', 'X-Large'],
             ],
             [
                 'name' => 'Skinny Fit Jeans',
                 'price' => 240,
                 'description' => 'Slim-cut denim jeans displayed in the product list section.',
                 'category_slugs' => ['jeans', 'casual', 'shop'],
+                'colors' => ['black', 'blue', 'gray'],
+                'sizes' => ['Small', 'Medium', 'Large', 'X-Large'],
             ],
             [
                 'name' => 'Checkered Shirt',
                 'price' => 180,
                 'description' => 'Checkered shirt from the homepage catalog examples.',
                 'category_slugs' => ['shirts', 'casual', 'new-arrivals'],
+                'colors' => ['white', 'blue', 'green', 'red'],
+                'sizes' => ['Small', 'Medium', 'Large', 'X-Large'],
             ],
             [
                 'name' => 'Sleeve Striped T-shirt',
                 'price' => 130,
                 'description' => 'Sleeve-striped t-shirt featured in the UI product tiles.',
                 'category_slugs' => ['t-shirts', 'casual', 'shop'],
+                'colors' => ['white', 'black', 'blue', 'navy'],
+                'sizes' => ['Small', 'Medium', 'Large', 'X-Large'],
             ],
         ];
 
@@ -210,6 +229,8 @@ class DatabaseSeeder extends Seeder
                     'compare_price' => $product['compare_price'] ?? null,
                     'description' => $product['description'],
                     'category_id' => $resolveCategoryId($product['category_slugs']),
+                    'colors' => $product['colors'] ?? Arr::random($colorPool, rand(2, 4)),
+                    'sizes' => $product['sizes'] ?? Arr::random($sizePool, rand(2, 4)),
                 ]
             );
         }
@@ -218,81 +239,92 @@ class DatabaseSeeder extends Seeder
         $existingCount = Product::count();
         $remaining = max(0, $targetProductCount - $existingCount);
 
-        if ($remaining === 0) {
-            return;
+        if ($remaining > 0) {
+            $styleWords = [
+                'Classic',
+                'Modern',
+                'Urban',
+                'Premium',
+                'Essential',
+                'Relaxed',
+                'Slim Fit',
+                'Oversized',
+                'Vintage',
+                'Sport',
+                'Everyday',
+                'Signature',
+            ];
+
+            $materials = [
+                'Cotton',
+                'Denim',
+                'Linen',
+                'Fleece',
+                'Knit',
+                'Jersey',
+                'Twill',
+                'Performance',
+            ];
+
+            $productTypeByCategorySlug = [
+                't-shirts' => ['Graphic T-shirt', 'Crew Neck Tee', 'Striped T-shirt'],
+                'polo-shirts' => ['Polo Shirt', 'Textured Polo', 'Contrast Polo'],
+                'shirts' => ['Oxford Shirt', 'Checkered Shirt', 'Casual Shirt'],
+                'jeans' => ['Slim Jeans', 'Straight Jeans', 'Relaxed Jeans'],
+                'shorts' => ['Cargo Shorts', 'Cotton Shorts', 'Denim Shorts'],
+                'hoodies' => ['Pullover Hoodie', 'Zip Hoodie', 'Fleece Hoodie'],
+                'outerwear' => ['Bomber Jacket', 'Lightweight Jacket', 'Windbreaker'],
+                'sweaters' => ['Crewneck Sweater', 'Knit Sweater', 'Cardigan'],
+                'blazers' => ['Tailored Blazer', 'Classic Blazer', 'Soft Blazer'],
+                'joggers' => ['Slim Joggers', 'Relaxed Joggers', 'Training Joggers'],
+                'accessories' => ['Canvas Belt', 'Minimal Cap', 'Travel Tote'],
+                'footwear' => ['Street Sneakers', 'Classic Loafers', 'Running Shoes'],
+                'casual' => ['Casual Tee', 'Everyday Shirt', 'Comfort Hoodie'],
+                'formal' => ['Formal Shirt', 'Dress Trousers', 'Suit Blazer'],
+                'party' => ['Party Shirt', 'Night Blazer', 'Statement Tee'],
+                'gym' => ['Training Tee', 'Gym Shorts', 'Performance Joggers'],
+                'shop' => ['Lifestyle Tee', 'Core Polo', 'Modern Jeans'],
+                'on-sale' => ['Sale Tee', 'Sale Polo', 'Sale Jeans'],
+                'new-arrivals' => ['New Arrival Tee', 'New Arrival Shirt', 'New Arrival Hoodie'],
+                'brands' => ['Signature Tee', 'Brand Polo', 'Brand Jeans'],
+            ];
+
+            for ($i = 1; $i <= $remaining; $i++) {
+                $category = $categories[($i - 1) % $categories->count()];
+                $categorySlug = $category->slug;
+
+                $style = Arr::random($styleWords);
+                $material = Arr::random($materials);
+                $types = $productTypeByCategorySlug[$categorySlug] ?? ['Fashion Item'];
+                $type = Arr::random($types);
+
+                $suffix = str_pad((string) $i, 3, '0', STR_PAD_LEFT);
+                $name = "{$style} {$type} {$material} {$suffix}";
+
+                Product::firstOrCreate(
+                    ['slug' => Str::slug($name)],
+                    [
+                        'name' => $name,
+                        'price' => rand(80, 320),
+                        'description' => "{$name} for {$category->name} looks, designed for daily comfort and versatile styling.",
+                        'category_id' => $category->id,
+                        'colors' => Arr::random($colorPool, rand(2, 5)),
+                        'sizes' => Arr::random($sizePool, rand(2, 5)),
+                    ]
+                );
+            }
         }
 
-        $styleWords = [
-            'Classic',
-            'Modern',
-            'Urban',
-            'Premium',
-            'Essential',
-            'Relaxed',
-            'Slim Fit',
-            'Oversized',
-            'Vintage',
-            'Sport',
-            'Everyday',
-            'Signature',
-        ];
-
-        $materials = [
-            'Cotton',
-            'Denim',
-            'Linen',
-            'Fleece',
-            'Knit',
-            'Jersey',
-            'Twill',
-            'Performance',
-        ];
-
-        $productTypeByCategorySlug = [
-            't-shirts' => ['Graphic T-shirt', 'Crew Neck Tee', 'Striped T-shirt'],
-            'polo-shirts' => ['Polo Shirt', 'Textured Polo', 'Contrast Polo'],
-            'shirts' => ['Oxford Shirt', 'Checkered Shirt', 'Casual Shirt'],
-            'jeans' => ['Slim Jeans', 'Straight Jeans', 'Relaxed Jeans'],
-            'shorts' => ['Cargo Shorts', 'Cotton Shorts', 'Denim Shorts'],
-            'hoodies' => ['Pullover Hoodie', 'Zip Hoodie', 'Fleece Hoodie'],
-            'outerwear' => ['Bomber Jacket', 'Lightweight Jacket', 'Windbreaker'],
-            'sweaters' => ['Crewneck Sweater', 'Knit Sweater', 'Cardigan'],
-            'blazers' => ['Tailored Blazer', 'Classic Blazer', 'Soft Blazer'],
-            'joggers' => ['Slim Joggers', 'Relaxed Joggers', 'Training Joggers'],
-            'accessories' => ['Canvas Belt', 'Minimal Cap', 'Travel Tote'],
-            'footwear' => ['Street Sneakers', 'Classic Loafers', 'Running Shoes'],
-            'casual' => ['Casual Tee', 'Everyday Shirt', 'Comfort Hoodie'],
-            'formal' => ['Formal Shirt', 'Dress Trousers', 'Suit Blazer'],
-            'party' => ['Party Shirt', 'Night Blazer', 'Statement Tee'],
-            'gym' => ['Training Tee', 'Gym Shorts', 'Performance Joggers'],
-            'shop' => ['Lifestyle Tee', 'Core Polo', 'Modern Jeans'],
-            'on-sale' => ['Sale Tee', 'Sale Polo', 'Sale Jeans'],
-            'new-arrivals' => ['New Arrival Tee', 'New Arrival Shirt', 'New Arrival Hoodie'],
-            'brands' => ['Signature Tee', 'Brand Polo', 'Brand Jeans'],
-        ];
-
-        for ($i = 1; $i <= $remaining; $i++) {
-            $category = $categories[($i - 1) % $categories->count()];
-            $categorySlug = $category->slug;
-
-            $style = Arr::random($styleWords);
-            $material = Arr::random($materials);
-            $types = $productTypeByCategorySlug[$categorySlug] ?? ['Fashion Item'];
-            $type = Arr::random($types);
-
-            $suffix = str_pad((string) $i, 3, '0', STR_PAD_LEFT);
-            $name = "{$style} {$type} {$material} {$suffix}";
-
-            Product::firstOrCreate(
-                ['slug' => Str::slug($name)],
-                [
-                    'name' => $name,
-                    'price' => rand(80, 320),
-                    'description' => "{$name} for {$category->name} looks, designed for daily comfort and versatile styling.",
-                    'category_id' => $category->id,
-                ]
-            );
-        }
+        Product::query()
+            ->whereNull('colors')
+            ->orWhereNull('sizes')
+            ->get()
+            ->each(function (Product $product) use ($colorPool, $sizePool): void {
+                $product->update([
+                    'colors' => !empty($product->colors) ? $product->colors : Arr::random($colorPool, rand(2, 5)),
+                    'sizes' => !empty($product->sizes) ? $product->sizes : Arr::random($sizePool, rand(2, 5)),
+                ]);
+            });
     }
 
     public function createOrders()
