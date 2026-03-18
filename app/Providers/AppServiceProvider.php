@@ -9,20 +9,24 @@ use App\Contracts\CategoryServiceInterface;
 use App\Contracts\ProfileServiceInterface;
 use App\Contracts\AuthServiceInterface;
 use App\Contracts\FileUploadServiceInterface;
+use App\Contracts\ReviewServiceInterface;
 use App\Contracts\Repositories\ProductRepositoryInterface;
 use App\Contracts\Repositories\CategoryRepositoryInterface;
 use App\Contracts\Repositories\UserRepositoryInterface;
 use App\Contracts\Repositories\OrderRepositoryInterface;
+use App\Contracts\Repositories\ReviewRepositoryInterface;
 use App\Services\UserService;
 use App\Services\ProductService;
 use App\Services\CategoryService;
 use App\Services\ProfileService;
 use App\Services\AuthService;
 use App\Services\FileUploadService;
+use App\Services\ReviewService;
 use App\Repositories\ProductRepository;
 use App\Repositories\CategoryRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\OrderRepository;
+use App\Repositories\ReviewRepository;
 use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
@@ -39,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(CategoryRepositoryInterface::class, CategoryRepository::class);
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(OrderRepositoryInterface::class, OrderRepository::class);
+        $this->app->bind(ReviewRepositoryInterface::class, ReviewRepository::class);
 
         // Bind Service Interfaces to Implementations
         $this->app->bind(UserServiceInterface::class, UserService::class);
@@ -47,6 +52,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ProfileServiceInterface::class, ProfileService::class);
         $this->app->bind(AuthServiceInterface::class, AuthService::class);
         $this->app->bind(FileUploadServiceInterface::class, FileUploadService::class);
+        $this->app->bind(ReviewServiceInterface::class, ReviewService::class);
     }
 
     /**

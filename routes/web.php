@@ -38,17 +38,23 @@ Route::get('/dashboard', function () {
 
 // User Profile routes
 Route::middleware(['auth'])->group(function () {
-    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
-    Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile/image', [\App\Http\Controllers\ProfileController::class, 'deleteImage'])->name('profile.deleteImage');
+    Route::get('/profile', [\App\Http\Controllers\Admin\ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [\App\Http\Controllers\Admin\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [\App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile/image', [\App\Http\Controllers\Admin\ProfileController::class, 'deleteImage'])->name('profile.deleteImage');
 });
 
 // Admin routes
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\ReviewController;
 
 Route::prefix('admin')->middleware(['auth','is_admin'])->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::get('/reviews', [ReviewController::class, 'index'])->name('admin.reviews.index');
+    Route::get('/reviews/create', [ReviewController::class, 'create'])->name('admin.reviews.create');
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('admin.reviews.store');
+    Route::get('/reviews/{review}/edit', [ReviewController::class, 'edit'])->name('admin.reviews.edit');
+    Route::put('/reviews/{review}', [ReviewController::class, 'update'])->name('admin.reviews.update');
 
     // Admin Profile routes
     Route::get('/profile', [\App\Http\Controllers\Admin\ProfileController::class, 'show'])->name('admin.profile.show');

@@ -11,7 +11,10 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Review;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 class DatabaseSeeder extends Seeder
 {
@@ -35,6 +38,7 @@ class DatabaseSeeder extends Seeder
         $this->createUsers();
         $this->createCategories();
         $this->createProducts();
+        $this->createReviews();
         $this->createOrders();
     }
 
@@ -62,6 +66,30 @@ class DatabaseSeeder extends Seeder
                     'role' => 'user',
                 ]);
             }
+        }
+
+        $reviewUserNames = [
+            'Samantha D.',
+            'Alex M.',
+            'Ethan R.',
+            'Olivia P.',
+            'Liam K.',
+            'Ava H.',
+            'Noah T.',
+            'Mia L.',
+        ];
+
+        foreach ($reviewUserNames as $name) {
+            $email = Str::slug($name, '.') . '@example.com';
+
+            User::firstOrCreate(
+                ['email' => $email],
+                [
+                    'name' => $name,
+                    'password' => bcrypt('password'),
+                    'role' => 'user',
+                ]
+            );
         }
     }
 
@@ -323,5 +351,257 @@ class DatabaseSeeder extends Seeder
                 ]);
             });
         }
+    }
+
+    public function createReviews()
+    {
+        $reviews = [
+            [
+                'id' => 'r001',
+                'productId' => 'p001',
+                'ratingStar' => 4.5,
+                'isVerified' => true,
+                'name' => 'Samantha D.',
+                'desc' => 'I absolutely love this t-shirt! The design is unique and the fabric feels so comfortable.',
+                'date' => '2023-08-14T00:00:00.000Z',
+            ],
+            [
+                'id' => 'r002',
+                'productId' => 'p002',
+                'ratingStar' => 4.0,
+                'isVerified' => true,
+                'name' => 'Alex M.',
+                'desc' => 'Good quality polo and true to size. Delivery was fast too.',
+                'date' => '2023-08-17T00:00:00.000Z',
+            ],
+            [
+                'id' => 'r003',
+                'productId' => 'p003',
+                'ratingStar' => 5.0,
+                'isVerified' => false,
+                'name' => 'Chris W.',
+                'desc' => 'Great print, soft material, and color matches the photos.',
+                'date' => '2023-08-20T00:00:00.000Z',
+            ],
+            [
+                'id' => 'r004',
+                'productId' => 'p004',
+                'ratingStar' => 3.5,
+                'isVerified' => true,
+                'name' => 'Jamie K.',
+                'desc' => 'Nice fit overall, but I wish the fabric was a bit thicker.',
+                'date' => '2023-08-23T00:00:00.000Z',
+            ],
+            [
+                'id' => 'r005',
+                'productId' => 'p005',
+                'ratingStar' => 4.5,
+                'isVerified' => true,
+                'name' => 'Taylor R.',
+                'desc' => 'Looks premium and very comfortable for daily wear.',
+                'date' => '2023-08-26T00:00:00.000Z',
+            ],
+        ];
+
+        $products = Product::query()
+            ->select(['id', 'slug'])
+            ->orderBy('id')
+            ->get();
+
+        if ($products->isEmpty() || empty($reviews)) {
+            return;
+        }
+
+        $productBySlug = $products->keyBy('slug');
+
+        // Frontend product IDs are mapped to known seeded base products.
+        $manualProductMap = [
+            'p001' => 'one-life-graphic-t-shirt',
+            'p002' => 'polo-with-contrast-trims',
+            'p003' => 'gradient-graphic-t-shirt',
+            'p004' => 'polo-with-tipping-details',
+            'p005' => 'black-striped-t-shirt',
+            'p006' => 'skinny-fit-jeans',
+            'p007' => 'checkered-shirt',
+            'p008' => 'sleeve-striped-t-shirt',
+        ];
+
+        foreach ($reviews as $review) {
+            $resolvedProductId = $this->resolveReviewProductId(
+                $review['productId'],
+                $products,
+                $productBySlug,
+                $manualProductMap
+            );
+
+            if ($resolvedProductId === null) {
+                continue;
+            }
+
+            $reviewUser = $this->resolveReviewUser($review['name']);
+            $createdAt = Carbon::parse($review['date']);
+
+            $alreadyExists = Review::query()
+                ->where('product_id', $resolvedProductId)
+                ->where('user_id', $reviewUser->id)
+                ->where('comment', $review['desc'])
+                ->where('created_at', $createdAt)
+                ->exists();
+
+            if ($alreadyExists) {
+                continue;
+            }
+
+            $createdReview = Review::create([
+                'product_id' => $resolvedProductId,
+                'user_id' => $reviewUser->id,
+                'rating' => $review['ratingStar'],
+                'comment' => $review['desc'],
+                'is_verified' => $review['isVerified'],
+            ]);
+
+            $createdReview->created_at = $createdAt;
+            $createdReview->updated_at = $createdAt;
+            $createdReview->save();
+        }
+
+        $reviewUserNames = [
+            'Samantha D.',
+            'Alex M.',
+            'Ethan R.',
+            'Olivia P.',
+            'Liam K.',
+            'Ava H.',
+            'Noah T.',
+            'Mia L.',
+        ];
+
+        $ratingOptions = [2, 2.5, 3, 3.5, 4, 4.5, 5];
+        $comments = [
+            "I absolutely love this t-shirt! The design is unique and the fabric feels so comfortable. As a fellow designer, I appreciate the attention to detail. It's become my favorite go-to shirt.",
+            "This t-shirt is a must-have for anyone who appreciates good design. The minimalistic yet stylish pattern caught my eye, and the fit is perfect. I can see the designer's touch in every aspect of this shirt.",
+            "This t-shirt is a fusion of comfort and creativity. The fabric is soft, and the design speaks volumes about the designer's skill. It's like wearing a piece of art that reflects my passion for both design and fashion.",
+            "The t-shirt exceeded my expectations! The colors are vibrant and the print quality is top-notch. Being a UI/UX designer myself, I'm quite picky about aesthetics, and this t-shirt definitely gets a thumbs up from me.",
+            "As a UI/UX enthusiast, I value simplicity and functionality. This t-shirt not only represents those principles but also feels great to wear. It's evident that the designer poured their creativity into making this t-shirt stand out.",
+            "I'm not just wearing a t-shirt; I'm wearing a piece of design philosophy. The intricate details and thoughtful layout of the design make this shirt a conversation starter."
+        ];
+
+        $targetReviewsPerProduct = 30;
+        $allProducts = Product::all();
+
+        foreach ($allProducts as $product) {
+            $currentCount = Review::where('product_id', $product->id)->count();
+
+            if ($currentCount >= $targetReviewsPerProduct) {
+                continue;
+            }
+
+            $missingCount = $targetReviewsPerProduct - $currentCount;
+
+            $candidateRows = [];
+            foreach ($reviewUserNames as $name) {
+                $user = $this->resolveReviewUser($name);
+
+                foreach ($comments as $comment) {
+                    $candidateRows[] = [
+                        'user' => $user,
+                        'comment' => $comment,
+                    ];
+                }
+            }
+
+            shuffle($candidateRows);
+            $insertedCount = 0;
+
+            foreach ($candidateRows as $candidate) {
+                if ($insertedCount >= $missingCount) {
+                    break;
+                }
+
+                $user = $candidate['user'];
+                $comment = $candidate['comment'];
+
+                $alreadyExists = Review::where('product_id', $product->id)
+                    ->where('user_id', $user->id)
+                    ->where('comment', $comment)
+                    ->exists();
+
+                if ($alreadyExists) {
+                    continue;
+                }
+
+                $createdAt = now()->subDays(rand(0, 60));
+
+                $review = Review::create([
+                    'product_id' => $product->id,
+                    'user_id' => $user->id,
+                    'rating' => Arr::random($ratingOptions),
+                    'comment' => $comment,
+                    'is_verified' => rand(1, 100) <= 70,
+                ]);
+
+                $review->created_at = $createdAt;
+                $review->updated_at = $createdAt;
+                $review->save();
+
+                $insertedCount++;
+            }
+        }
+    }
+
+    protected function resolveReviewUser(string $name): User
+    {
+        $existingUser = User::query()->where('name', $name)->first();
+
+        if ($existingUser) {
+            return $existingUser;
+        }
+
+        return User::create([
+            'name' => $name,
+            'email' => $this->generateUniqueReviewUserEmail($name),
+            'password' => Hash::make('password'),
+            'role' => 'user',
+        ]);
+    }
+
+    protected function generateUniqueReviewUserEmail(string $name): string
+    {
+        $base = Str::slug($name, '.');
+        $base = $base !== '' ? $base : 'review.user';
+
+        $candidate = "{$base}@example.com";
+        $suffix = 1;
+
+        while (User::withTrashed()->where('email', $candidate)->exists()) {
+            $candidate = "{$base}.{$suffix}@example.com";
+            $suffix++;
+        }
+
+        return $candidate;
+    }
+
+    protected function resolveReviewProductId(
+        string $frontendProductId,
+        Collection $products,
+        Collection $productBySlug,
+        array $manualProductMap
+    ): ?int {
+        $mappedSlug = $manualProductMap[$frontendProductId] ?? null;
+
+        if ($mappedSlug && $productBySlug->has($mappedSlug)) {
+            return $productBySlug->get($mappedSlug)->id;
+        }
+
+        if (preg_match('/^p(\d+)$/', $frontendProductId, $matches) === 1) {
+            $index = max(0, (int) $matches[1] - 1);
+            $product = $products->get($index);
+
+            if ($product) {
+                return $product->id;
+            }
+        }
+
+        return $products->first()?->id;
     }
 }

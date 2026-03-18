@@ -1,229 +1,96 @@
-# GitHub Copilot Instructions for Laravel Backend
-
-This project follows a strict layered architecture.
-All generated code must follow these conventions.
+# Laravel Backend – Copilot Rules
 
 ## Architecture
 
-Always follow this dependency flow:
-
 Controller → Service (Interface) → Repository (Interface) → Model
 
-Controllers must NEVER access repositories or models directly.
-
-Services contain business logic.
-
-Repositories handle database queries only.
-
-Controllers must remain thin.
+- Controllers: thin, no business logic
+- Services: business logic only
+- Repositories: DB queries only
+- Never access Model/Repository directly in Controller
 
 ---
 
-# Request Handling
+## Request & Validation
 
-Always use FormRequest for validation.
-
-Example:
-
-```
-app/Http/Requests/ProductIndexRequest.php
-```
-
-Rules example:
-
-- search: nullable|string
-- category_id: nullable|integer|exists:categories,id
-- page: nullable|integer|min:1
-- per_page: nullable|integer|min:1|max:100
-
-Controllers should never validate input manually.
+- Always use FormRequest
+- No manual validation in Controller
 
 ---
 
-# DTO Pattern
+## DTO
 
-All data passed from Controller to Service must use DTO objects.
-
-Services must NEVER depend on:
-
-```
-Illuminate\Http\Request
-```
-
-DTO example location:
-
-```
-app/DTO/Product/ProductFilterDTO.php
-```
-
-Example structure:
-
-```php
-class ProductFilterDTO
-{
-    public function __construct(
-        public readonly ?string $search,
-        public readonly ?int $categoryId,
-        public readonly int $page,
-        public readonly int $perPage
-    ) {}
-
-    public static function fromRequest(ProductIndexRequest $request): self
-    {
-        return new self(
-            search: $request->input('search'),
-            categoryId: $request->input('category_id'),
-            page: $request->input('page', 1),
-            perPage: $request->input('per_page', 15)
-        );
-    }
-}
-```
+- Use DTO between Controller → Service
+- Services must NOT use Request
+- Example: ProductFilterDTO
 
 ---
 
-# Controllers
+## Controller Rules
 
-Controllers must:
-
-- receive FormRequest
-- convert Request → DTO
-- call Service
-- return API Resource
-
-Controllers must NOT contain business logic.
-
-Example:
-
-```php
-public function index(ProductIndexRequest $request)
-{
-    $filter = ProductFilterDTO::fromRequest($request);
-
-    $products = $this->productService->getAllProducts($filter);
-
-    return $this->success(
-        ProductResource::collection($products),
-        'Products retrieved successfully'
-    );
-}
-```
+- Receive FormRequest
+- Convert to DTO
+- Call Service
+- Return API Resource
 
 ---
 
-# Service Layer
+## Service Layer
 
-Services must:
-
-- implement an interface
-- contain business logic
-- call repositories
-- use DTO objects
-- not depend on HTTP Request
-
-Example:
-
-```
-app/Services/ProductService.php
-app/Services/Interfaces/ProductServiceInterface.php
-```
-
-Example method:
-
-```php
-public function getAllProducts(ProductFilterDTO $filter);
-```
+- Must use Interface
+- Contains business logic
+- Accept DTO only
+- No HTTP dependency
 
 ---
 
-# Repository Layer
+## Repository Layer
 
-Repositories must:
-
-- implement an interface
-- contain database queries only
-- use Eloquent models
-- not contain business logic
-
-Example:
-
-```
-app/Repositories/ProductRepository.php
-app/Repositories/Interfaces/ProductRepositoryInterface.php
-```
+- Must use Interface
+- Only DB queries (Eloquent)
+- No business logic
 
 ---
 
-# Pagination
+## Pagination
 
-All list endpoints must support pagination.
-
-Use:
-
-```
-->paginate($perPage)
-```
-
-DTO should contain:
-
-- page
-- perPage
+- Use `paginate()`
+- DTO must have: `page`, `perPage`
 
 ---
 
-# API Responses
+## API Response
 
-All responses must use:
-
-- API Resource
+- Always use API Resource
 - Standard response format
 
-Example:
+---
 
-```
-ProductResource::collection($products)
-```
+## OpenAPI
+
+- Add annotations in Controllers
 
 ---
 
-# OpenAPI
+## Naming
 
-Controllers must include OpenAPI annotations.
-
-Example:
-
-```
-@OA\Get(
-    path="/api/products",
-    summary="List products"
-)
-```
+- PSR-12
+- Clear names:
+  - ProductServiceInterface
+  - ProductRepositoryInterface
+  - ProductFilterDTO
+  - ProductIndexRequest
 
 ---
 
-# Naming Conventions
+## Strict Rules
 
-Follow PSR-12.
-
-Use clear naming:
-
-- ProductServiceInterface
-- ProductRepositoryInterface
-- ProductFilterDTO
-- ProductIndexRequest
-
----
-
-# General Rules
-
-Copilot must follow these rules when generating code:
-
-1. Always use FormRequest for validation
-2. Always use DTO between Controller and Service
-3. Services must depend on interfaces
-4. Controllers must stay thin
-5. Repositories handle database queries only
-6. No business logic in controllers
-7. No Request objects inside Services
-8. Use dependency injection
-9. Follow PSR-12 PHP coding standards
+1. Use FormRequest
+2. Use DTO (Controller → Service)
+3. Service depends on Interface
+4. Thin Controllers
+5. Repository = DB only
+6. No business logic in Controller
+7. No Request in Service
+8. Use Dependency Injection
+9. Follow PSR-12

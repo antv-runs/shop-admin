@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\ReviewController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,6 +34,11 @@ Route::prefix('products')->controller(ProductController::class)->group(function 
     Route::get('/exports/{filename}', 'downloadExport')->name('products.download-export');
     Route::get('/{id}', 'show')->where('id', '[0-9]+');
     Route::get('/slug/{slug}', 'showBySlug');
+});
+
+Route::prefix('products/{id}/reviews')->controller(ReviewController::class)->group(function () {
+    Route::get('/', 'index')->where('id', '[0-9]+');
+    Route::post('/', 'store')->where('id', '[0-9]+');
 });
 
 // Categories

@@ -17,6 +17,9 @@
             <li>
                 <a href="{{ route('admin.users.index') }}" class="block px-3 py-2 rounded {{ request()->routeIs('admin.users.*') ? 'bg-gray-100 font-semibold' : '' }}">Users Management</a>
             </li>
+            <li>
+                <a href="{{ route('admin.reviews.index') }}" class="block px-3 py-2 rounded {{ request()->routeIs('admin.reviews.*') ? 'bg-gray-100 font-semibold' : '' }}">Review Management</a>
+            </li>
         </ul>
     </nav>
 
