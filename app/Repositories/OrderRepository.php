@@ -38,6 +38,8 @@ class OrderRepository implements OrderRepositoryInterface
                     'quantity' => $quantity,
                     'price' => $price,
                     'total' => $lineTotal,
+                    'color' => $item['color'] ?? null,
+                    'size' => $item['size'] ?? null,
                 ];
             }
 

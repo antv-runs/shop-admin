@@ -12,13 +12,15 @@ return new class extends Migration
             return;
         }
 
-        Schema::table('products', function (Blueprint $table) {
+        $currencyAfterColumn = Schema::hasColumn('products', 'compare_price') ? 'compare_price' : 'price';
+
+        Schema::table('products', function (Blueprint $table) use ($currencyAfterColumn) {
             if (!Schema::hasColumn('products', 'details')) {
                 $table->text('details')->nullable()->after('description');
             }
 
             if (!Schema::hasColumn('products', 'currency')) {
-                $table->char('currency', 3)->default('USD')->after('compare_price');
+                $table->char('currency', 3)->default('USD')->after($currencyAfterColumn);
             }
 
             if (!Schema::hasColumn('products', 'rating_avg')) {
