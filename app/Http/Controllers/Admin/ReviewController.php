@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreReviewRequest;
+use App\Http\Requests\Admin\UpdateReviewRequest;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\User;
@@ -14,6 +16,7 @@ class ReviewController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
         $rating = (string) $request->query('rating', '');
+        $productId = (string) $request->query('product_id', '');
         $sort = (string) $request->query('sort', 'latest');
 
         $query = Review::query()->with(['product:id,name', 'user:id,email,name']);
@@ -24,8 +27,14 @@ class ReviewController extends Controller
                 ->select('reviews.*');
         }
 
-        if ($rating !== '' && in_array($rating, ['1', '2', '3', '4', '5'], true)) {
+        $allowedRatings = ['1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'];
+
+        if ($rating !== '' && in_array($rating, $allowedRatings, true)) {
             $query->where('reviews.rating', (float) $rating);
+        }
+
+        if ($productId !== '' && ctype_digit($productId)) {
+            $query->where('reviews.product_id', (int) $productId);
         }
 
         if ($sort === 'oldest') {
@@ -38,12 +47,15 @@ class ReviewController extends Controller
         }
 
         $reviews = $query->paginate(10)->appends($request->query());
+        $products = Product::query()->select(['id', 'name'])->orderBy('name')->get();
 
         return view('admin.reviews.index', [
             'reviews' => $reviews,
+            'products' => $products,
             'filters' => [
                 'search' => $search,
                 'rating' => $rating,
+                'product_id' => $productId,
                 'sort' => $sort,
             ],
         ]);
@@ -57,15 +69,9 @@ class ReviewController extends Controller
         return view('admin.reviews.create', compact('products', 'users'));
     }
 
-    public function store(Request $request)
+    public function store(StoreReviewRequest $request)
     {
-        $validated = $request->validate([
-            'product_id' => ['required', 'exists:products,id'],
-            'user_id' => ['nullable', 'exists:users,id'],
-            'rating' => ['required', 'numeric', 'min:1', 'max:5'],
-            'comment' => ['required', 'string'],
-            'is_verified' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         Review::create([
             'product_id' => (int) $validated['product_id'],
@@ -88,15 +94,9 @@ class ReviewController extends Controller
         return view('admin.reviews.edit', compact('review', 'products', 'users'));
     }
 
-    public function update(Request $request, Review $review)
+    public function update(UpdateReviewRequest $request, Review $review)
     {
-        $validated = $request->validate([
-            'product_id' => ['required', 'exists:products,id'],
-            'user_id' => ['nullable', 'exists:users,id'],
-            'rating' => ['required', 'numeric', 'min:1', 'max:5'],
-            'comment' => ['required', 'string'],
-            'is_verified' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $review->update([
             'product_id' => (int) $validated['product_id'],
@@ -108,5 +108,14 @@ class ReviewController extends Controller
 
         return redirect()->route('admin.reviews.index')
             ->with('success', 'Review updated successfully');
+    }
+
+    public function destroy(Request $request, Review $review)
+    {
+        $review->delete();
+
+        return redirect()
+            ->route('admin.reviews.index', $request->query())
+            ->with('success', 'Review deleted successfully.');
     }
 }

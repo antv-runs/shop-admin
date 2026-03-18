@@ -40,7 +40,7 @@
                 <label class="block font-medium">Rating</label>
                 <select name="rating" class="mt-1 block w-full border rounded px-3 py-2">
                     <option value="">-- Select Rating --</option>
-                    @foreach([1, 2, 3, 4, 5] as $rating)
+                    @foreach([1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] as $rating)
                         <option value="{{ $rating }}" {{ (string) old('rating', $review->rating) === (string) $rating ? 'selected' : '' }}>
                             {{ $rating }}
                         </option>

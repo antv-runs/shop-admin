@@ -15,7 +15,7 @@
         @endif
 
         <form method="GET" action="{{ route('admin.reviews.index') }}" class="mb-6 p-4 bg-gray-50 rounded">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                 <div>
                     <label class="block text-sm font-medium mb-1">Search by User Email</label>
                     <input
@@ -28,13 +28,29 @@
                 </div>
 
                 <div>
+                    <label class="block text-sm font-medium mb-1">Product</label>
+                    <select name="product_id" class="w-full border rounded px-3 py-2 text-sm">
+                        <option value="">All Products</option>
+                        @foreach($products as $product)
+                            <option value="{{ $product->id }}" {{ (string) ($filters['product_id'] ?? '') === (string) $product->id ? 'selected' : '' }}>
+                                {{ $product->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
                     <label class="block text-sm font-medium mb-1">Rating</label>
                     <select name="rating" class="w-full border rounded px-3 py-2 text-sm">
                         <option value="" {{ ($filters['rating'] ?? '') === '' ? 'selected' : '' }}>All</option>
                         <option value="1" {{ ($filters['rating'] ?? '') === '1' ? 'selected' : '' }}>1</option>
+                        <option value="1.5" {{ ($filters['rating'] ?? '') === '1.5' ? 'selected' : '' }}>1.5</option>
                         <option value="2" {{ ($filters['rating'] ?? '') === '2' ? 'selected' : '' }}>2</option>
+                        <option value="2.5" {{ ($filters['rating'] ?? '') === '2.5' ? 'selected' : '' }}>2.5</option>
                         <option value="3" {{ ($filters['rating'] ?? '') === '3' ? 'selected' : '' }}>3</option>
+                        <option value="3.5" {{ ($filters['rating'] ?? '') === '3.5' ? 'selected' : '' }}>3.5</option>
                         <option value="4" {{ ($filters['rating'] ?? '') === '4' ? 'selected' : '' }}>4</option>
+                        <option value="4.5" {{ ($filters['rating'] ?? '') === '4.5' ? 'selected' : '' }}>4.5</option>
                         <option value="5" {{ ($filters['rating'] ?? '') === '5' ? 'selected' : '' }}>5</option>
                     </select>
                 </div>
@@ -79,7 +95,15 @@
                         <td class="px-4 py-2">{{ $review->is_verified ? 'Yes' : 'No' }}</td>
                         <td class="px-4 py-2 text-sm text-gray-600">{{ $review->created_at?->format('M d, Y H:i') }}</td>
                         <td class="px-4 py-2">
-                            <a href="{{ route('admin.reviews.edit', $review->id) }}" class="text-indigo-600 text-sm">Edit</a>
+                            <a href="{{ route('admin.reviews.edit', $review->id) }}" class="text-indigo-600 text-sm mr-2">Edit</a>
+                            <form action="{{ route('admin.reviews.destroy', $review->id) }}" method="POST" style="display:inline;">
+                                @csrf
+                                @method('DELETE')
+                                @foreach(request()->query() as $queryKey => $queryValue)
+                                    <input type="hidden" name="{{ $queryKey }}" value="{{ $queryValue }}">
+                                @endforeach
+                                <button type="submit" onclick="return confirm('Are you sure?')" class="text-red-600 text-sm">Delete</button>
+                            </form>
                         </td>
                     </tr>
                 @empty

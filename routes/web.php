@@ -55,6 +55,7 @@ Route::prefix('admin')->middleware(['auth','is_admin'])->group(function () {
     Route::post('/reviews', [ReviewController::class, 'store'])->name('admin.reviews.store');
     Route::get('/reviews/{review}/edit', [ReviewController::class, 'edit'])->name('admin.reviews.edit');
     Route::put('/reviews/{review}', [ReviewController::class, 'update'])->name('admin.reviews.update');
+    Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('admin.reviews.destroy');
 
     // Admin Profile routes
     Route::get('/profile', [\App\Http\Controllers\Admin\ProfileController::class, 'show'])->name('admin.profile.show');
