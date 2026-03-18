@@ -23,21 +23,37 @@ class OrderController extends BaseController
      * @OA\Get(
      *     path="/api/orders",
      *     summary="List orders belonging to authenticated user",
-     *     description="Retrieve paginated list of orders for the authenticated user",
+        *     description="Retrieve a paginated list of orders for the authenticated user.",
      *     tags={"Orders"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(name="page", in="query", description="Page number (default: 1)", @OA\Schema(type="integer", minimum=1)),
-     *     @OA\Parameter(name="per_page", in="query", description="Items per page (default: 15)", @OA\Schema(type="integer", minimum=1)),
+        *     @OA\Parameter(name="per_page", in="query", description="Items per page (default: 15)", @OA\Schema(type="integer", minimum=1, default=15)),
      *     @OA\Response(
      *         response=200,
      *         description="Orders retrieved successfully",
      *         @OA\JsonContent(
+        *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Order")),
+        *             @OA\Property(property="links", type="object",
+        *                 @OA\Property(property="first", type="string"),
+        *                 @OA\Property(property="last", type="string"),
+        *                 @OA\Property(property="prev", type="string", nullable=true),
+        *                 @OA\Property(property="next", type="string", nullable=true)
+        *             ),
+        *             @OA\Property(property="meta", type="object",
+        *                 @OA\Property(property="current_page", type="integer"),
+        *                 @OA\Property(property="last_page", type="integer"),
+        *                 @OA\Property(property="per_page", type="integer"),
+        *                 @OA\Property(property="total", type="integer")
+        *             ),
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string"),
-     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Order"))
+        *             @OA\Property(property="message", type="string", example="Orders retrieved successfully")
      *         )
      *     ),
-     *     @OA\Response(response=401, description="Unauthenticated")
+        *     @OA\Response(
+        *         response=401,
+        *         description="Unauthenticated",
+        *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+        *     )
      * )
      */
     public function index(Request $request)
@@ -51,7 +67,7 @@ class OrderController extends BaseController
      * @OA\Get(
      *     path="/api/orders/{id}",
      *     summary="Get order details",
-     *     description="Retrieve details of a specific order belonging to the authenticated user",
+     *     description="Retrieve details of a specific order that belongs to the authenticated user.",
      *     tags={"Orders"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, description="Order ID", @OA\Schema(type="integer")),
@@ -60,12 +76,20 @@ class OrderController extends BaseController
      *         description="Order details retrieved successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="message", type="string", example="Order retrieved successfully"),
      *             @OA\Property(property="data", ref="#/components/schemas/Order")
      *         )
      *     ),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=404, description="Order not found or does not belong to user")
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Order not found or does not belong to user",
+     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+     *     )
      * )
      */
     public function show($id)
@@ -78,30 +102,32 @@ class OrderController extends BaseController
      * @OA\Post(
      *     path="/api/orders",
      *     summary="Create a new order",
-      *     description="Create a new order for guest or authenticated user with customer information and items array.",
+     *     description="Create a new order for guest or authenticated users with customer and items payload. After creation, a queued SendOrderCreatedEmail job is dispatched after transaction commit.",
      *     tags={"Orders"},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-      *             required={"customer", "items"},
-      *             @OA\Property(
-      *                 property="customer",
-      *                 type="object",
-      *                 required={"name", "email", "phone", "address"},
-      *                 @OA\Property(property="name", type="string", example="John Doe"),
-      *                 @OA\Property(property="email", type="string", format="email", example="john@email.com"),
-      *                 @OA\Property(property="phone", type="string", example="0123456789"),
-      *                 @OA\Property(property="address", type="string", example="Ho Chi Minh City")
-      *             ),
+     *             required={"customer", "items"},
+     *             @OA\Property(
+     *                 property="customer",
+     *                 type="object",
+     *                 required={"name", "email", "phone", "address"},
+     *                 @OA\Property(property="name", type="string", maxLength=255, example="John Doe"),
+     *                 @OA\Property(property="email", type="string", format="email", maxLength=255, example="john@email.com"),
+     *                 @OA\Property(property="phone", type="string", maxLength=50, example="0123456789"),
+     *                 @OA\Property(property="address", type="string", maxLength=1000, example="Ho Chi Minh City")
+     *             ),
      *             @OA\Property(
      *                 property="items",
      *                 type="array",
      *                 minItems=1,
-     *                 example={{"product_id": 1, "quantity": 2}},
+     *                 example={{"product_id": 1, "quantity": 2, "color": "black", "size": "M"}},
      *                 @OA\Items(
      *                     required={"product_id", "quantity"},
      *                     @OA\Property(property="product_id", type="integer", description="Valid product ID that exists in database"),
-     *                     @OA\Property(property="quantity", type="integer", minimum=1, description="Quantity of item ordered")
+     *                     @OA\Property(property="quantity", type="integer", minimum=1, description="Quantity of item ordered"),
+     *                     @OA\Property(property="color", type="string", maxLength=50, nullable=true),
+     *                     @OA\Property(property="size", type="string", maxLength=50, nullable=true)
      *                 )
      *             )
      *         )
@@ -111,7 +137,7 @@ class OrderController extends BaseController
      *         description="Order created successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="message", type="string", example="Order created successfully"),
      *             @OA\Property(property="data", ref="#/components/schemas/Order")
      *         )
      *     ),
@@ -120,7 +146,11 @@ class OrderController extends BaseController
      *         description="Validation failed",
      *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
      *     ),
-     *     @OA\Response(response=401, description="Unauthenticated")
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+     *     )
      * )
      */
     public function store(OrderRequest $request)

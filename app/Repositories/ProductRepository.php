@@ -17,6 +17,7 @@ class ProductRepository implements ProductRepositoryInterface
     {
         return Product::query()
             ->with(['images', 'primaryImage', 'category'])
+            ->withAvg('reviews', 'rating')
             ->findOrFail($id);
     }
 
@@ -27,6 +28,7 @@ class ProductRepository implements ProductRepositoryInterface
     {
         $query = Product::query()
             ->with(['category', 'images', 'primaryImage'])
+            ->withAvg('reviews', 'rating')
             ->where('is_active', true)
             ->latest('id');
 
@@ -97,7 +99,11 @@ class ProductRepository implements ProductRepositoryInterface
      */
     public function getTrashed($perPage = 10)
     {
-        return Product::onlyTrashed()->with('category')->latest('deleted_at')->paginate($perPage);
+        return Product::onlyTrashed()
+            ->with('category')
+            ->withAvg('reviews', 'rating')
+            ->latest('deleted_at')
+            ->paginate($perPage);
     }
 
     /**
@@ -137,7 +143,9 @@ class ProductRepository implements ProductRepositoryInterface
      */
     public function paginate($perPage = 10)
     {
-        return Product::paginate($perPage);
+        return Product::query()
+            ->withAvg('reviews', 'rating')
+            ->paginate($perPage);
     }
 
     /**
@@ -147,6 +155,7 @@ class ProductRepository implements ProductRepositoryInterface
     {
         return Product::query()
             ->with(['category', 'images', 'primaryImage'])
+            ->withAvg('reviews', 'rating')
             ->where('slug', $slug)
             ->firstOrFail();
     }

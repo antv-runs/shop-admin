@@ -313,8 +313,86 @@
                     "Categories"
                 ],
                 "summary": "List storefront categories",
-                "description": "Get categories used by storefront navigation",
+                "description": "Returns a paginated collection of active categories. Supports filtering by search, status, parent_id, has_children, sort.",
                 "operationId": "ac9c4d978ea4e5b72915ca9728e5b8b1",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "max:255",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 255
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "enum: active, deleted, all, trashed",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "deleted",
+                                "all",
+                                "trashed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "parent_id",
+                        "in": "query",
+                        "description": "must exist in categories table",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "has_children",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "enum: name, created_at",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "name",
+                                "created_at"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "min:1",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "min:1, max:100",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Categories retrieved successfully",
@@ -322,6 +400,65 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "slug": {
+                                                        "type": "string"
+                                                    },
+                                                    "href": {
+                                                        "type": "string"
+                                                    },
+                                                    "hasChildren": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "links": {
+                                            "properties": {
+                                                "first": {
+                                                    "type": "string"
+                                                },
+                                                "last": {
+                                                    "type": "string"
+                                                },
+                                                "prev": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "next": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
                                         "success": {
                                             "type": "boolean",
                                             "example": true
@@ -329,12 +466,6 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Categories retrieved successfully"
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Category"
-                                            }
                                         }
                                     },
                                     "type": "object"
@@ -348,11 +479,10 @@
                 "tags": [
                     "Categories"
                 ],
-                "summary": "Create new category",
-                "description": "Create a new category (Admin only). Validation: name required min:3 max:100 unique, description nullable string",
+                "summary": "Create a new category",
+                "description": "Admin only. Creates a category with a unique name.",
                 "operationId": "cca49a87d9b0ebb9a98ad7c154b71737",
                 "requestBody": {
-                    "description": "Category data per CategoryRequest validation",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -362,14 +492,14 @@
                                 ],
                                 "properties": {
                                     "name": {
+                                        "description": "unique in categories table",
                                         "type": "string",
                                         "maxLength": 100,
-                                        "minLength": 3,
-                                        "example": "Electronics"
+                                        "minLength": 3
                                     },
                                     "description": {
                                         "type": "string",
-                                        "example": "All electronic devices"
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -389,10 +519,28 @@
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "Category created successfully"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/Category"
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "slug": {
+                                                    "type": "string"
+                                                },
+                                                "href": {
+                                                    "type": "string"
+                                                },
+                                                "hasChildren": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -401,13 +549,41 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "unauthenticated"
                     },
                     "403": {
-                        "description": "Admin access required"
+                        "description": "forbidden (non-admin)"
                     },
                     "422": {
-                        "description": "Validation error (name already exists or invalid format)"
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "name": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -422,17 +598,16 @@
                 "tags": [
                     "Categories"
                 ],
-                "summary": "Get category detail",
-                "description": "Retrieve a single category by ID",
+                "summary": "Get a single category by ID",
+                "description": "Returns a single category. No authentication required.",
                 "operationId": "09767bb2e47dde77dd1e2591428b0ae1",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "Category ID",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -448,10 +623,28 @@
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "Category retrieved successfully"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/Category"
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "slug": {
+                                                    "type": "string"
+                                                },
+                                                "href": {
+                                                    "type": "string"
+                                                },
+                                                "hasChildren": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -460,7 +653,29 @@
                         }
                     },
                     "404": {
-                        "description": "Category not found"
+                        "description": "Category not found.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Category not found."
+                                        },
+                                        "errors": {
+                                            "type": "string",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -468,17 +683,16 @@
                 "tags": [
                     "Categories"
                 ],
-                "summary": "Soft delete category",
-                "description": "Soft delete a category (Admin only)",
+                "summary": "Soft delete a category",
+                "description": "Admin only. Soft deletes a category (recoverable via restore). Returns no data payload.",
                 "operationId": "9b61b65823f4a21f182506b34ddf805c",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "Category ID",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -494,7 +708,13 @@
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "Category deleted successfully"
+                                        },
+                                        "data": {
+                                            "type": "string",
+                                            "example": null,
+                                            "nullable": true
                                         }
                                     },
                                     "type": "object"
@@ -503,13 +723,13 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "unauthenticated"
                     },
                     "403": {
-                        "description": "Admin access required"
+                        "description": "forbidden"
                     },
                     "404": {
-                        "description": "Category not found"
+                        "description": "not found"
                     }
                 },
                 "security": [
@@ -522,22 +742,20 @@
                 "tags": [
                     "Categories"
                 ],
-                "summary": "Update category",
-                "description": "Update a category (Admin only). Validation: name required min:3 max:100 unique (except current), description nullable string",
+                "summary": "Update a category",
+                "description": "Admin only. Updates name and/or description. Name must be unique, ignoring the current category's own record.",
                 "operationId": "b13d20619d95750562d5ccb8ae81d765",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "Category ID",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
                 "requestBody": {
-                    "description": "Category data per CategoryRequest validation",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -547,12 +765,14 @@
                                 ],
                                 "properties": {
                                     "name": {
+                                        "description": "unique ignoring current id",
                                         "type": "string",
                                         "maxLength": 100,
                                         "minLength": 3
                                     },
                                     "description": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -572,10 +792,28 @@
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "Category updated successfully"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/Category"
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "slug": {
+                                                    "type": "string"
+                                                },
+                                                "href": {
+                                                    "type": "string"
+                                                },
+                                                "hasChildren": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -584,16 +822,44 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "unauthenticated"
                     },
                     "403": {
-                        "description": "Admin access required"
+                        "description": "forbidden"
                     },
                     "404": {
-                        "description": "Category not found"
+                        "description": "not found"
                     },
                     "422": {
-                        "description": "Validation error (name already exists)"
+                        "description": "validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "name": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -608,28 +874,9 @@
                 "tags": [
                     "Categories"
                 ],
-                "summary": "Get soft deleted categories",
-                "description": "Get soft deleted categories with pagination (Admin only)",
+                "summary": "List soft-deleted categories",
+                "description": "Admin only. Returns paginated soft-deleted categories. Hardcoded page size of 15 items.",
                 "operationId": "f384cb25ac4c41a40ccd857ebff0febd",
-                "parameters": [
-                    {
-                        "name": "page",
-                        "in": "query",
-                        "description": "Page number",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "per_page",
-                        "in": "query",
-                        "description": "Items per page",
-                        "schema": {
-                            "type": "integer",
-                            "example": 10
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Trashed categories retrieved successfully",
@@ -637,18 +884,73 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "slug": {
+                                                        "type": "string"
+                                                    },
+                                                    "href": {
+                                                        "type": "string"
+                                                    },
+                                                    "hasChildren": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "links": {
+                                            "properties": {
+                                                "first": {
+                                                    "type": "string"
+                                                },
+                                                "last": {
+                                                    "type": "string"
+                                                },
+                                                "prev": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "next": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
                                         "success": {
                                             "type": "boolean",
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string"
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Category"
-                                            }
+                                            "type": "string",
+                                            "example": "Trashed categories retrieved successfully"
                                         }
                                     },
                                     "type": "object"
@@ -657,10 +959,10 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "unauthenticated"
                     },
                     "403": {
-                        "description": "Admin access required"
+                        "description": "forbidden"
                     }
                 },
                 "security": [
@@ -675,17 +977,16 @@
                 "tags": [
                     "Categories"
                 ],
-                "summary": "Restore soft deleted category",
-                "description": "Restore a soft deleted category (Admin only)",
+                "summary": "Restore a soft-deleted category",
+                "description": "Admin only. Recovers a previously soft-deleted category.",
                 "operationId": "e58ec3fdf3cae72ba7731f80245ab739",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "Category ID",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -701,10 +1002,28 @@
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "Category restored successfully"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/Category"
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "slug": {
+                                                    "type": "string"
+                                                },
+                                                "href": {
+                                                    "type": "string"
+                                                },
+                                                "hasChildren": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -713,13 +1032,13 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "unauthenticated"
                     },
                     "403": {
-                        "description": "Admin access required"
+                        "description": "forbidden"
                     },
                     "404": {
-                        "description": "Category not found"
+                        "description": "not found"
                     }
                 },
                 "security": [
@@ -734,17 +1053,16 @@
                 "tags": [
                     "Categories"
                 ],
-                "summary": "Permanently delete category",
-                "description": "Permanently delete a category (cannot be restored, Admin only)",
+                "summary": "Permanently delete a category",
+                "description": "Admin only. Permanently removes a category. Cannot be undone. Returns no data payload.",
                 "operationId": "f4257836f9122280614ca4a7433d16d7",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "Category ID",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -760,7 +1078,13 @@
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "Category permanently deleted"
+                                        },
+                                        "data": {
+                                            "type": "string",
+                                            "example": null,
+                                            "nullable": true
                                         }
                                     },
                                     "type": "object"
@@ -769,13 +1093,13 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "unauthenticated"
                     },
                     "403": {
-                        "description": "Admin access required"
+                        "description": "forbidden"
                     },
                     "404": {
-                        "description": "Category not found"
+                        "description": "not found"
                     }
                 },
                 "security": [
@@ -791,7 +1115,7 @@
                     "Orders"
                 ],
                 "summary": "List orders belonging to authenticated user",
-                "description": "Retrieve paginated list of orders for the authenticated user",
+                "description": "Retrieve a paginated list of orders for the authenticated user.",
                 "operationId": "955bb77a45ae173a485fadb8befed93f",
                 "parameters": [
                     {
@@ -809,6 +1133,7 @@
                         "description": "Items per page (default: 15)",
                         "schema": {
                             "type": "integer",
+                            "default": 15,
                             "minimum": 1
                         }
                     }
@@ -820,18 +1145,55 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        },
                                         "data": {
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/components/schemas/Order"
                                             }
+                                        },
+                                        "links": {
+                                            "properties": {
+                                                "first": {
+                                                    "type": "string"
+                                                },
+                                                "last": {
+                                                    "type": "string"
+                                                },
+                                                "prev": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "next": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Orders retrieved successfully"
                                         }
                                     },
                                     "type": "object"
@@ -840,7 +1202,14 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -854,7 +1223,7 @@
                     "Orders"
                 ],
                 "summary": "Create a new order",
-                "description": "Create a new order for guest or authenticated user with customer information and items array.",
+                "description": "Create a new order for guest or authenticated users with customer and items payload. After creation, a queued SendOrderCreatedEmail job is dispatched after transaction commit.",
                 "operationId": "2123ba58dadb22bd6f2c8081af562230",
                 "requestBody": {
                     "required": true,
@@ -876,19 +1245,23 @@
                                         "properties": {
                                             "name": {
                                                 "type": "string",
+                                                "maxLength": 255,
                                                 "example": "John Doe"
                                             },
                                             "email": {
                                                 "type": "string",
                                                 "format": "email",
+                                                "maxLength": 255,
                                                 "example": "john@email.com"
                                             },
                                             "phone": {
                                                 "type": "string",
+                                                "maxLength": 50,
                                                 "example": "0123456789"
                                             },
                                             "address": {
                                                 "type": "string",
+                                                "maxLength": 1000,
                                                 "example": "Ho Chi Minh City"
                                             }
                                         },
@@ -910,6 +1283,16 @@
                                                     "description": "Quantity of item ordered",
                                                     "type": "integer",
                                                     "minimum": 1
+                                                },
+                                                "color": {
+                                                    "type": "string",
+                                                    "maxLength": 50,
+                                                    "nullable": true
+                                                },
+                                                "size": {
+                                                    "type": "string",
+                                                    "maxLength": 50,
+                                                    "nullable": true
                                                 }
                                             },
                                             "type": "object"
@@ -918,7 +1301,9 @@
                                         "example": [
                                             {
                                                 "product_id": 1,
-                                                "quantity": 2
+                                                "quantity": 2,
+                                                "color": "black",
+                                                "size": "M"
                                             }
                                         ]
                                     }
@@ -940,7 +1325,8 @@
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "Order created successfully"
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/Order"
@@ -962,9 +1348,22 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    },
+                    {}
+                ]
             }
         },
         "/api/orders/{id}": {
@@ -973,7 +1372,7 @@
                     "Orders"
                 ],
                 "summary": "Get order details",
-                "description": "Retrieve details of a specific order belonging to the authenticated user",
+                "description": "Retrieve details of a specific order that belongs to the authenticated user.",
                 "operationId": "88d27387b1e409e075c18609d4a0c300",
                 "parameters": [
                     {
@@ -998,7 +1397,8 @@
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "Order retrieved successfully"
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/Order"
@@ -1010,10 +1410,24 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Order not found or does not belong to user"
+                        "description": "Order not found or does not belong to user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
