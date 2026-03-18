@@ -64,7 +64,7 @@ class ProductService implements ProductServiceInterface
      */
     public function createProduct(CreateProductDTO $dto)
     {
-        $result = $this->productRepository->create($dto->toArray());
+        $result = $this->productRepository->create($this->buildProductData($dto));
 
         // Invalidate list cache
         $this->invalidateProductListCache();
@@ -90,9 +90,7 @@ class ProductService implements ProductServiceInterface
      */
     public function updateProduct(Product $product, UpdateProductDTO $dto)
     {
-        $data = $dto->toArray();
-
-        $result = $this->productRepository->update($product, $data);
+        $result = $this->productRepository->update($product, $this->buildProductData($dto));
 
         // Invalidate caches
         CacheHelper::forget(CacheKey::productDetail($product->id));
@@ -154,6 +152,14 @@ class ProductService implements ProductServiceInterface
     private function invalidateProductListCache()
     {
         CacheHelper::flushTags([CacheConstants::TAG_PRODUCT_LIST]);
+    }
+
+    /**
+     * Build product persistence payload from create/update DTO.
+     */
+    private function buildProductData(CreateProductDTO|UpdateProductDTO $dto): array
+    {
+        return $dto->toArray();
     }
 
     /**

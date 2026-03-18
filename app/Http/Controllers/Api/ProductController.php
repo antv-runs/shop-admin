@@ -30,112 +30,56 @@ class ProductController extends BaseController
     }
 
     /**
-     * Storefront endpoint: list products for shop UI.
+     * List products with filters and pagination
      *
      * @OA\Get(
      *     path="/api/products",
-     *     summary="Get storefront products",
-     *     description="Retrieve paginated storefront products. Supports filtering by keyword, category, status, and price range. All filter parameters are optional and combinable.",
+     *     summary="List products with filters and pagination",
+     *     description="Retrieve paginated products. Public endpoint with optional filtering by search, category, and status.",
      *     tags={"Products"},
-     *
      *     @OA\Parameter(
      *         name="search",
      *         in="query",
-     *         description="Search products by name (partial match)",
+     *         description="Search products by name",
      *         required=false,
-     *         @OA\Schema(type="string", maxLength=255, example="t-shirt")
+     *         @OA\Schema(type="string", example="t-shirt")
      *     ),
      *     @OA\Parameter(
      *         name="category_id",
      *         in="query",
-     *         description="Filter by category ID (must exist in categories table)",
+     *         description="Filter by category ID",
      *         required=false,
      *         @OA\Schema(type="integer", example=3)
      *     ),
      *     @OA\Parameter(
      *         name="status",
      *         in="query",
-     *         description="Filter by product status. 'trashed' is an alias for 'deleted'.",
+     *         description="Filter by status",
      *         required=false,
-     *         @OA\Schema(type="string", enum={"active", "deleted", "all", "trashed"}, example="active")
-     *     ),
-     *     @OA\Parameter(
-     *         name="min_price",
-     *         in="query",
-     *         description="Minimum price filter (inclusive). Must be >= 0. If both min_price and max_price are provided, min_price must be <= max_price.",
-     *         required=false,
-     *         @OA\Schema(type="number", format="float", minimum=0, example=50)
-     *     ),
-     *     @OA\Parameter(
-     *         name="max_price",
-     *         in="query",
-     *         description="Maximum price filter (inclusive). Must be >= 0 and >= min_price when both are provided.",
-     *         required=false,
-     *         @OA\Schema(type="number", format="float", minimum=0, example=200)
-     *     ),
-     *     @OA\Parameter(
-     *         name="page",
-     *         in="query",
-     *         description="Page number for pagination",
-     *         required=false,
-     *         @OA\Schema(type="integer", minimum=1, default=1, example=1)
+     *         @OA\Schema(type="string", enum={"active", "deleted", "all"}, example="active")
      *     ),
      *     @OA\Parameter(
      *         name="per_page",
      *         in="query",
-     *         description="Number of items per page",
+     *         description="Items per page",
      *         required=false,
-     *         @OA\Schema(type="integer", minimum=1, maximum=100, default=15, example=15)
+     *         @OA\Schema(type="integer", default=15, example=15)
      *     ),
-     *
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=1, example=1)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Products retrieved successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Products retrieved successfully"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     type="object",
-     *                     @OA\Property(property="id", type="string", example="1"),
-     *                     @OA\Property(property="name", type="string", example="Basic T-Shirt"),
-     *                     @OA\Property(property="slug", type="string", example="basic-t-shirt"),
-     *                     @OA\Property(property="description", type="string", nullable=true, example="A comfortable everyday tee."),
-     *                     @OA\Property(
-     *                         property="pricing",
-     *                         type="object",
-     *                         @OA\Property(property="currency", type="string", example="USD"),
-     *                         @OA\Property(property="current", type="number", format="float", example=29.99),
-     *                         @OA\Property(property="original", type="number", format="float", example=49.99),
-     *                         @OA\Property(property="discountPercent", type="integer", nullable=true, example=40)
-     *                     ),
-     *                     @OA\Property(property="thumbnail", type="string", nullable=true, example="https://cdn.example.com/products/tshirt.jpg"),
-     *                     @OA\Property(
-     *                         property="images",
-     *                         type="array",
-     *                         @OA\Items(ref="#/components/schemas/ProductImage")
-     *                     ),
-     *                     @OA\Property(
-     *                         property="category",
-     *                         type="object",
-     *                         nullable=true,
-     *                         @OA\Property(property="id", type="string", example="3"),
-     *                         @OA\Property(property="name", type="string", example="T-Shirts"),
-     *                         @OA\Property(property="slug", type="string", example="t-shirts")
-     *                     )
-     *                 )
-     *             ),
-     *             @OA\Property(
-     *                 property="meta",
-     *                 type="object",
-     *                 description="Pagination metadata",
-     *                 @OA\Property(property="current_page", type="integer", example=1),
-     *                 @OA\Property(property="last_page", type="integer", example=5),
-     *                 @OA\Property(property="per_page", type="integer", example=15),
-     *                 @OA\Property(property="total", type="integer", example=72)
-     *             )
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Product")),
+     *             @OA\Property(property="meta", type="object")
      *         )
      *     ),
      *     @OA\Response(response=422, description="Validation error")
@@ -155,21 +99,27 @@ class ProductController extends BaseController
     /**
      * @OA\Post(
      *     path="/api/products",
-     *     summary="Create new product",
-    *     description="Create a new product (Admin only). Validation: name required max:255, price required numeric min:0, category_id nullable exists:categories,id",
+     *     summary="Create a new product",
+     *     description="Create a new product (Admin only)",
      *     tags={"Products"},
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
-     *         description="Product data per ProductRequest validation",
+     *         description="Product data",
      *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
+     *             mediaType="application/json",
      *             @OA\Schema(
-     *                 required={"name","price"},
+     *                 required={"name", "price", "currency"},
      *                 @OA\Property(property="name", type="string", maxLength=255),
      *                 @OA\Property(property="price", type="number", format="float", minimum=0),
-     *                 @OA\Property(property="description", type="string"),
-     *                 @OA\Property(property="category_id", type="integer")
+     *                 @OA\Property(property="compare_price", type="number", format="float", nullable=true),
+     *                 @OA\Property(property="description", type="string", nullable=true),
+     *                 @OA\Property(property="details", type="string", nullable=true),
+     *                 @OA\Property(property="colors", type="array", @OA\Items(type="string"), nullable=true),
+     *                 @OA\Property(property="sizes", type="array", @OA\Items(type="string"), nullable=true),
+     *                 @OA\Property(property="currency", type="string", default="USD"),
+     *                 @OA\Property(property="is_active", type="boolean", default=true),
+     *                 @OA\Property(property="category_id", type="integer", nullable=true)
      *             )
      *         )
      *     ),
@@ -183,7 +133,7 @@ class ProductController extends BaseController
      *         )
      *     ),
      *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Admin access required"),
+     *     @OA\Response(response=403, description="Forbidden"),
      *     @OA\Response(response=422, description="Validation error")
      * )
      */
@@ -204,89 +154,40 @@ class ProductController extends BaseController
     }
 
     /**
-     * Upload product image
-     *
      * @OA\Post(
      *     path="/api/products/upload",
-      *     summary="Upload product images",
-      *     description="Upload one or more images for a product. The first uploaded image becomes the product thumbnail and all uploaded images are stored in the product gallery.",
+     *     summary="Upload product images",
+     *     description="Upload product images (Admin only)",
      *     tags={"Products"},
      *     security={{"bearerAuth":{}}},
-     *
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-    *                 required={"id","images[]"},
-     *
+     *                 required={"id", "images[]"},
+     *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(
-     *                     property="id",
-     *                     type="integer",
-     *                     example=1,
-     *                     description="ID of the product"
-     *                 ),
-     *
-     *                 @OA\Property(
-    *                     property="images[]",
-      *                     type="array",
-      *                     description="Array of image files",
-      *                     @OA\Items(
-      *                         type="string",
-      *                         format="binary",
-      *                         description="Image file (jpeg, png, jpg, webp, max 2MB)"
-      *                     )
+     *                     property="images[]",
+     *                     type="array",
+     *                     @OA\Items(type="string", format="binary")
      *                 )
-      *             )
+     *             )
      *         )
      *     ),
-     *
      *     @OA\Response(
      *         response=200,
-      *         description="Product images uploaded successfully",
+     *         description="Images uploaded successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-      *             @OA\Property(property="message", type="string", example="Product images uploaded successfully"),
-      *             @OA\Property(
-      *                 property="data",
-      *                 type="object",
-      *                 @OA\Property(property="id", type="integer", example=1),
-      *                 @OA\Property(property="name", type="string", example="Basic T-shirt"),
-      *                 @OA\Property(property="thumbnail", type="string", nullable=true, example="https://cdn.example.com/products/thumbnail.jpg"),
-      *                 @OA\Property(
-      *                     property="images",
-      *                     type="array",
-      *                     @OA\Items(
-      *                         type="object",
-      *                         @OA\Property(property="id", type="string"),
-      *                         @OA\Property(property="image_url", type="string"),
-      *                         @OA\Property(property="is_primary", type="boolean"),
-      *                         @OA\Property(property="sort_order", type="integer")
-      *                     )
-      *                 )
-      *             )
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="data", ref="#/components/schemas/Product")
      *         )
      *     ),
-     *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated"
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=403,
-     *         description="Admin access required"
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=404,
-     *         description="Product not found"
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation error"
-     *     )
+     *     @OA\Response(response=401, description="Unauthenticated"),
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=404, description="Not found"),
+     *     @OA\Response(response=422, description="Validation error")
      * )
      */
     public function upload(UploadImageRequest $request)
@@ -305,54 +206,27 @@ class ProductController extends BaseController
     }
 
     /**
-     * Storefront endpoint: product detail by id.
-     *
      * @OA\Get(
      *     path="/api/products/{id}",
-     *     summary="Get product detail",
+     *     summary="Get a single product by ID",
      *     tags={"Products"},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
      *         required=true,
      *         description="Product ID",
-     *         @OA\Schema(type="integer")
+     *         @OA\Schema(type="string")
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Product detail",
+     *         description="Product retrieved successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Product retrieved successfully"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="object",
-     *                 @OA\Property(property="id", type="integer"),
-     *                 @OA\Property(property="name", type="string"),
-     *                 @OA\Property(
-     *                     property="pricing",
-     *                     type="object",
-     *                     @OA\Property(property="currency", type="string"),
-     *                     @OA\Property(property="current", type="number"),
-     *                     @OA\Property(property="original", type="number"),
-     *                     @OA\Property(property="discountPercent", type="integer", nullable=true)
-     *                 ),
-     *                 @OA\Property(property="thumbnail", type="string", nullable=true),
-     *                 @OA\Property(
-     *                     property="images",
-     *                     type="array",
-     *                     @OA\Items(type="object")
-     *                 )
-     *             )
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="data", ref="#/components/schemas/Product")
      *         )
      *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Product not found",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Product not found")
-     *         )
-     *     )
+     *     @OA\Response(response=404, description="Not found")
      * )
      */
     public function show($id)
@@ -372,24 +246,27 @@ class ProductController extends BaseController
     }
 
     /**
-     * Storefront endpoint: product detail by slug.
-     *
      * @OA\Get(
      *     path="/api/products/slug/{slug}",
-     *     summary="Get storefront product detail by slug",
-     *     description="Retrieve storefront product detail by slug",
+     *     summary="Get a single product by slug",
      *     tags={"Products"},
-     *     @OA\Parameter(name="slug", in="path", required=true, description="Product slug", @OA\Schema(type="string")),
+     *     @OA\Parameter(
+     *         name="slug",
+     *         in="path",
+     *         required=true,
+     *         description="Product slug",
+     *         @OA\Schema(type="string")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Product retrieved successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Product retrieved successfully"),
+     *             @OA\Property(property="message", type="string"),
      *             @OA\Property(property="data", ref="#/components/schemas/Product")
      *         )
      *     ),
-     *     @OA\Response(response=404, description="Product not found")
+     *     @OA\Response(response=404, description="Not found")
      * )
      */
     public function showBySlug(string $slug)
@@ -405,22 +282,33 @@ class ProductController extends BaseController
     /**
      * @OA\Patch(
      *     path="/api/products/{id}",
-     *     summary="Update product",
-     *     description="Update product details (Admin only). Validation same as create",
+     *     summary="Update a product",
+     *     description="Update product details (Admin only)",
      *     tags={"Products"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="id", in="path", required=true, description="Product ID", @OA\Schema(type="integer")),
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Product ID",
+     *         @OA\Schema(type="string")
+     *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         description="Product data per ProductRequest validation",
+     *         description="Product data (all fields optional for PATCH)",
      *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
+     *             mediaType="application/json",
      *             @OA\Schema(
-     *                 required={"name","price"},
      *                 @OA\Property(property="name", type="string", maxLength=255),
      *                 @OA\Property(property="price", type="number", format="float", minimum=0),
-     *                 @OA\Property(property="description", type="string"),
-     *                 @OA\Property(property="category_id", type="integer")
+     *                 @OA\Property(property="compare_price", type="number", format="float", nullable=true),
+     *                 @OA\Property(property="description", type="string", nullable=true),
+     *                 @OA\Property(property="details", type="string", nullable=true),
+     *                 @OA\Property(property="colors", type="array", @OA\Items(type="string"), nullable=true),
+     *                 @OA\Property(property="sizes", type="array", @OA\Items(type="string"), nullable=true),
+     *                 @OA\Property(property="currency", type="string"),
+     *                 @OA\Property(property="is_active", type="boolean"),
+     *                 @OA\Property(property="category_id", type="integer", nullable=true)
      *             )
      *         )
      *     ),
@@ -434,8 +322,8 @@ class ProductController extends BaseController
      *         )
      *     ),
      *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Admin access required"),
-     *     @OA\Response(response=404, description="Product not found"),
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=404, description="Not found"),
      *     @OA\Response(response=422, description="Validation error")
      * )
      */
@@ -458,11 +346,17 @@ class ProductController extends BaseController
     /**
      * @OA\Delete(
      *     path="/api/products/{id}",
-     *     summary="Soft delete product",
+     *     summary="Soft delete a product",
      *     description="Soft delete a product (Admin only)",
      *     tags={"Products"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="id", in="path", required=true, description="Product ID", @OA\Schema(type="integer")),
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Product ID",
+     *         @OA\Schema(type="string")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Product deleted successfully",
@@ -472,8 +366,8 @@ class ProductController extends BaseController
      *         )
      *     ),
      *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Admin access required"),
-     *     @OA\Response(response=404, description="Product not found")
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=404, description="Not found")
      * )
      */
     public function destroy($id)
@@ -489,23 +383,43 @@ class ProductController extends BaseController
     /**
      * @OA\Get(
      *     path="/api/products/trashed",
-     *     summary="Get soft deleted products",
-     *     description="Get soft deleted products with pagination (Admin only)",
+     *     summary="List soft-deleted products",
+     *     description="List soft-deleted products with pagination (Admin only)",
      *     tags={"Products"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="page", in="query", description="Page number", @OA\Schema(type="integer", default=1)),
-     *     @OA\Parameter(name="per_page", in="query", description="Items per page", @OA\Schema(type="integer", default=10)),
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Search products by name",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Items per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=15)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Trashed products retrieved successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string"),
-     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Product"))
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Product")),
+     *             @OA\Property(property="meta", type="object")
      *         )
      *     ),
      *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Admin access required")
+     *     @OA\Response(response=403, description="Forbidden")
      * )
      */
     public function trashed(Request $request)
@@ -523,23 +437,28 @@ class ProductController extends BaseController
     /**
      * @OA\Patch(
      *     path="/api/products/{id}/restore",
-     *     summary="Restore soft deleted product",
-     *     description="Restore a soft deleted product (Admin only)",
+     *     summary="Restore a soft-deleted product",
+     *     description="Restore a soft-deleted product (Admin only)",
      *     tags={"Products"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="id", in="path", required=true, description="Product ID", @OA\Schema(type="integer")),
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Product ID",
+     *         @OA\Schema(type="string")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Product restored successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string"),
-     *             @OA\Property(property="data", ref="#/components/schemas/Product")
+     *             @OA\Property(property="message", type="string")
      *         )
      *     ),
      *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Admin access required"),
-     *     @OA\Response(response=404, description="Product not found")
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=404, description="Not found")
      * )
      */
     public function restore($id)
@@ -554,11 +473,17 @@ class ProductController extends BaseController
     /**
      * @OA\Delete(
      *     path="/api/products/{id}/force-delete",
-     *     summary="Permanently delete product",
-     *     description="Permanently delete a product (cannot be restored, Admin only)",
+     *     summary="Permanently delete a product",
+     *     description="Permanently delete a product (Admin only)",
      *     tags={"Products"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="id", in="path", required=true, description="Product ID", @OA\Schema(type="integer")),
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Product ID",
+     *         @OA\Schema(type="string")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Product permanently deleted",
@@ -568,8 +493,8 @@ class ProductController extends BaseController
      *         )
      *     ),
      *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Admin access required"),
-     *     @OA\Response(response=404, description="Product not found")
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=404, description="Not found")
      * )
      */
     public function forceDelete($id)
@@ -585,20 +510,20 @@ class ProductController extends BaseController
      * @OA\Post(
      *     path="/api/products/export",
      *     summary="Export products to file",
-     *     description="Export products to CSV or Excel format with optional filtering (Admin only, async job, returns 202 Accepted)",
+     *     description="Export products to CSV or Excel format (Admin only, async)",
      *     tags={"Products"},
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
-     *         description="Export parameters per ExportProductRequest validation",
+     *         description="Export parameters",
      *         @OA\MediaType(
      *             mediaType="application/json",
      *             @OA\Schema(
      *                 required={"format"},
-     *                 @OA\Property(property="format", type="string", enum={"csv", "excel"}, description="Export file format"),
-     *                 @OA\Property(property="search", type="string", description="Optional search term"),
-     *                 @OA\Property(property="category_id", type="integer", description="Optional category filter"),
-     *                 @OA\Property(property="status", type="string", enum={"active", "deleted", "all"}, description="Filter by status")
+     *                 @OA\Property(property="format", type="string", enum={"xlsx", "csv"}, example="xlsx"),
+     *                 @OA\Property(property="search", type="string", nullable=true),
+     *                 @OA\Property(property="category_id", type="integer", nullable=true),
+     *                 @OA\Property(property="status", type="string", enum={"active", "deleted", "all"}, nullable=true)
      *             )
      *         )
      *     ),
@@ -607,14 +532,12 @@ class ProductController extends BaseController
      *         description="Export job queued",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Export job queued. You will receive an email with the download link shortly."),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="format", type="string", example="excel")
-     *             )
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="data", type="object")
      *         )
      *     ),
      *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Admin access required"),
+     *     @OA\Response(response=403, description="Forbidden"),
      *     @OA\Response(response=422, description="Validation error")
      * )
      */
@@ -644,47 +567,24 @@ class ProductController extends BaseController
     }
 
     /**
-     * Download exported file
-     *
      * @OA\Get(
      *     path="/api/products/exports/{filename}",
-     *     summary="Download exported product file",
-     *     description="Download an exported product file (CSV or XLSX). Can be accessed via signed URL from email or with Bearer token.",
+     *     summary="Download a previously exported file",
+     *     description="Download a previously exported product file",
      *     tags={"Products"},
      *     @OA\Parameter(
      *         name="filename",
      *         in="path",
      *         required=true,
-     *         description="Filename of the export",
+     *         description="Export filename",
      *         @OA\Schema(type="string", example="products_export_2026-03-03_09-41-08.xlsx")
-     *     ),
-     *     @OA\Parameter(
-     *         name="signature",
-     *         in="query",
-     *         required=false,
-     *         description="URL signature for verification (included in email link)",
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Parameter(
-     *         name="expires",
-     *         in="query",
-     *         required=false,
-     *         description="Signature expiration timestamp",
-     *         @OA\Schema(type="integer")
      *     ),
      *     @OA\Response(
      *         response=200,
      *         description="File downloaded successfully",
      *         @OA\MediaType(mediaType="application/octet-stream")
      *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="File not found"
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Invalid or expired signature (when using signed URL)"
-     *     )
+     *     @OA\Response(response=404, description="Not found")
      * )
      */
     public function downloadExport(Request $request, $filename)

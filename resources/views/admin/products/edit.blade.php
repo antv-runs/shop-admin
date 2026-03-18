@@ -42,6 +42,26 @@
                 </div>
 
                 <div>
+                    <label for="colors" class="block text-sm font-medium text-gray-700">Colors</label>
+                    <input type="text" name="colors_input" id="colors"
+                           placeholder="e.g. Red, Blue, Green"
+                           value="{{ old('colors', $product->colors ? implode(', ', $product->colors) : '') }}"
+                           class="mt-1 block w-full border rounded px-3 py-2 text-sm">
+                    <p class="text-xs text-gray-400 mt-1">Separate values with commas</p>
+                    @error('colors') <p class="text-red-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label for="sizes" class="block text-sm font-medium text-gray-700">Sizes</label>
+                    <input type="text" name="sizes_input" id="sizes"
+                           placeholder="e.g. S, M, L, XL"
+                           value="{{ old('sizes',  $product->sizes  ? implode(', ', $product->sizes)  : '') }}"
+                           class="mt-1 block w-full border rounded px-3 py-2 text-sm">
+                    <p class="text-xs text-gray-400 mt-1">Separate values with commas</p>
+                    @error('sizes') <p class="text-red-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
                     <label class="block font-medium">Category:</label>
                     <select name="category_id" class="mt-1 block w-full border rounded px-3 py-2">
                         <option value="">-- Select Category --</option>

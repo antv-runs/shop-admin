@@ -1028,25 +1028,24 @@
                 "tags": [
                     "Products"
                 ],
-                "summary": "Get storefront products",
-                "description": "Retrieve paginated storefront products. Supports filtering by keyword, category, status, and price range. All filter parameters are optional and combinable.",
+                "summary": "List products with filters and pagination",
+                "description": "Retrieve paginated products. Public endpoint with optional filtering by search, category, and status.",
                 "operationId": "d97d1c3727cbac49708b85f7d11f7d58",
                 "parameters": [
                     {
                         "name": "search",
                         "in": "query",
-                        "description": "Search products by name (partial match)",
+                        "description": "Search products by name",
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "maxLength": 255,
                             "example": "t-shirt"
                         }
                     },
                     {
                         "name": "category_id",
                         "in": "query",
-                        "description": "Filter by category ID (must exist in categories table)",
+                        "description": "Filter by category ID",
                         "required": false,
                         "schema": {
                             "type": "integer",
@@ -1056,66 +1055,38 @@
                     {
                         "name": "status",
                         "in": "query",
-                        "description": "Filter by product status. 'trashed' is an alias for 'deleted'.",
+                        "description": "Filter by status",
                         "required": false,
                         "schema": {
                             "type": "string",
                             "enum": [
                                 "active",
                                 "deleted",
-                                "all",
-                                "trashed"
+                                "all"
                             ],
                             "example": "active"
                         }
                     },
                     {
-                        "name": "min_price",
+                        "name": "per_page",
                         "in": "query",
-                        "description": "Minimum price filter (inclusive). Must be >= 0. If both min_price and max_price are provided, min_price must be <= max_price.",
+                        "description": "Items per page",
                         "required": false,
                         "schema": {
-                            "type": "number",
-                            "format": "float",
-                            "minimum": 0,
-                            "example": 50
-                        }
-                    },
-                    {
-                        "name": "max_price",
-                        "in": "query",
-                        "description": "Maximum price filter (inclusive). Must be >= 0 and >= min_price when both are provided.",
-                        "required": false,
-                        "schema": {
-                            "type": "number",
-                            "format": "float",
-                            "minimum": 0,
-                            "example": 200
+                            "type": "integer",
+                            "default": 15,
+                            "example": 15
                         }
                     },
                     {
                         "name": "page",
                         "in": "query",
-                        "description": "Page number for pagination",
+                        "description": "Page number",
                         "required": false,
                         "schema": {
                             "type": "integer",
                             "default": 1,
-                            "minimum": 1,
                             "example": 1
-                        }
-                    },
-                    {
-                        "name": "per_page",
-                        "in": "query",
-                        "description": "Number of items per page",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "default": 15,
-                            "maximum": 100,
-                            "minimum": 1,
-                            "example": 15
                         }
                     }
                 ],
@@ -1131,107 +1102,15 @@
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string",
-                                            "example": "Products retrieved successfully"
+                                            "type": "string"
                                         },
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "string",
-                                                        "example": "1"
-                                                    },
-                                                    "name": {
-                                                        "type": "string",
-                                                        "example": "Basic T-Shirt"
-                                                    },
-                                                    "slug": {
-                                                        "type": "string",
-                                                        "example": "basic-t-shirt"
-                                                    },
-                                                    "description": {
-                                                        "type": "string",
-                                                        "example": "A comfortable everyday tee.",
-                                                        "nullable": true
-                                                    },
-                                                    "pricing": {
-                                                        "properties": {
-                                                            "currency": {
-                                                                "type": "string",
-                                                                "example": "USD"
-                                                            },
-                                                            "current": {
-                                                                "type": "number",
-                                                                "format": "float",
-                                                                "example": 29.99
-                                                            },
-                                                            "original": {
-                                                                "type": "number",
-                                                                "format": "float",
-                                                                "example": 49.99
-                                                            },
-                                                            "discountPercent": {
-                                                                "type": "integer",
-                                                                "example": 40,
-                                                                "nullable": true
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    },
-                                                    "thumbnail": {
-                                                        "type": "string",
-                                                        "example": "https://cdn.example.com/products/tshirt.jpg",
-                                                        "nullable": true
-                                                    },
-                                                    "images": {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "$ref": "#/components/schemas/ProductImage"
-                                                        }
-                                                    },
-                                                    "category": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "string",
-                                                                "example": "3"
-                                                            },
-                                                            "name": {
-                                                                "type": "string",
-                                                                "example": "T-Shirts"
-                                                            },
-                                                            "slug": {
-                                                                "type": "string",
-                                                                "example": "t-shirts"
-                                                            }
-                                                        },
-                                                        "type": "object",
-                                                        "nullable": true
-                                                    }
-                                                },
-                                                "type": "object"
+                                                "$ref": "#/components/schemas/Product"
                                             }
                                         },
                                         "meta": {
-                                            "description": "Pagination metadata",
-                                            "properties": {
-                                                "current_page": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "last_page": {
-                                                    "type": "integer",
-                                                    "example": 5
-                                                },
-                                                "per_page": {
-                                                    "type": "integer",
-                                                    "example": 15
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": 72
-                                                }
-                                            },
                                             "type": "object"
                                         }
                                     },
@@ -1249,18 +1128,19 @@
                 "tags": [
                     "Products"
                 ],
-                "summary": "Create new product",
-                "description": "Create a new product (Admin only). Validation: name required max:255, price required numeric min:0, category_id nullable exists:categories,id",
+                "summary": "Create a new product",
+                "description": "Create a new product (Admin only)",
                 "operationId": "785644b7d7dd38af4b51dafd0fbc1b6d",
                 "requestBody": {
-                    "description": "Product data per ProductRequest validation",
+                    "description": "Product data",
                     "required": true,
                     "content": {
-                        "multipart/form-data": {
+                        "application/json": {
                             "schema": {
                                 "required": [
                                     "name",
-                                    "price"
+                                    "price",
+                                    "currency"
                                 ],
                                 "properties": {
                                     "name": {
@@ -1272,11 +1152,44 @@
                                         "format": "float",
                                         "minimum": 0
                                     },
+                                    "compare_price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "nullable": true
+                                    },
                                     "description": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "details": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "colors": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "sizes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "currency": {
+                                        "type": "string",
+                                        "default": "USD"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "default": true
                                     },
                                     "category_id": {
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -1311,7 +1224,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Admin access required"
+                        "description": "Forbidden"
                     },
                     "422": {
                         "description": "Validation error"
@@ -1330,7 +1243,7 @@
                     "Products"
                 ],
                 "summary": "Upload product images",
-                "description": "Upload one or more images for a product. The first uploaded image becomes the product thumbnail and all uploaded images are stored in the product gallery.",
+                "description": "Upload product images (Admin only)",
                 "operationId": "b7730b90ea2ab130219528aa7018a283",
                 "requestBody": {
                     "required": true,
@@ -1343,15 +1256,12 @@
                                 ],
                                 "properties": {
                                     "id": {
-                                        "description": "ID of the product",
                                         "type": "integer",
                                         "example": 1
                                     },
                                     "images[]": {
-                                        "description": "Array of image files",
                                         "type": "array",
                                         "items": {
-                                            "description": "Image file (jpeg, png, jpg, webp, max 2MB)",
                                             "type": "string",
                                             "format": "binary"
                                         }
@@ -1364,7 +1274,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Product images uploaded successfully",
+                        "description": "Images uploaded successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1374,46 +1284,10 @@
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string",
-                                            "example": "Product images uploaded successfully"
+                                            "type": "string"
                                         },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "Basic T-shirt"
-                                                },
-                                                "thumbnail": {
-                                                    "type": "string",
-                                                    "example": "https://cdn.example.com/products/thumbnail.jpg",
-                                                    "nullable": true
-                                                },
-                                                "images": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "string"
-                                                            },
-                                                            "image_url": {
-                                                                "type": "string"
-                                                            },
-                                                            "is_primary": {
-                                                                "type": "boolean"
-                                                            },
-                                                            "sort_order": {
-                                                                "type": "integer"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
+                                            "$ref": "#/components/schemas/Product"
                                         }
                                     },
                                     "type": "object"
@@ -1425,10 +1299,10 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Admin access required"
+                        "description": "Forbidden"
                     },
                     "404": {
-                        "description": "Product not found"
+                        "description": "Not found"
                     },
                     "422": {
                         "description": "Validation error"
@@ -1446,8 +1320,7 @@
                 "tags": [
                     "Products"
                 ],
-                "summary": "Get product detail",
-                "description": "Storefront endpoint: product detail by id.",
+                "summary": "Get a single product by ID",
                 "operationId": "c87fb2e4d617e7b36c712cad358acdb8",
                 "parameters": [
                     {
@@ -1456,13 +1329,13 @@
                         "description": "Product ID",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Product detail",
+                        "description": "Product retrieved successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1472,47 +1345,10 @@
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string",
-                                            "example": "Product retrieved successfully"
+                                            "type": "string"
                                         },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer"
-                                                },
-                                                "name": {
-                                                    "type": "string"
-                                                },
-                                                "pricing": {
-                                                    "properties": {
-                                                        "currency": {
-                                                            "type": "string"
-                                                        },
-                                                        "current": {
-                                                            "type": "number"
-                                                        },
-                                                        "original": {
-                                                            "type": "number"
-                                                        },
-                                                        "discountPercent": {
-                                                            "type": "integer",
-                                                            "nullable": true
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                },
-                                                "thumbnail": {
-                                                    "type": "string",
-                                                    "nullable": true
-                                                },
-                                                "images": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
+                                            "$ref": "#/components/schemas/Product"
                                         }
                                     },
                                     "type": "object"
@@ -1521,20 +1357,7 @@
                         }
                     },
                     "404": {
-                        "description": "Product not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Product not found"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Not found"
                     }
                 }
             },
@@ -1542,7 +1365,7 @@
                 "tags": [
                     "Products"
                 ],
-                "summary": "Soft delete product",
+                "summary": "Soft delete a product",
                 "description": "Soft delete a product (Admin only)",
                 "operationId": "b49ce9f3cb168b233245548fb4ef36d3",
                 "parameters": [
@@ -1552,7 +1375,7 @@
                         "description": "Product ID",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -1580,10 +1403,10 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Admin access required"
+                        "description": "Forbidden"
                     },
                     "404": {
-                        "description": "Product not found"
+                        "description": "Not found"
                     }
                 },
                 "security": [
@@ -1596,8 +1419,8 @@
                 "tags": [
                     "Products"
                 ],
-                "summary": "Update product",
-                "description": "Update product details (Admin only). Validation same as create",
+                "summary": "Update a product",
+                "description": "Update product details (Admin only)",
                 "operationId": "7b6a99d3d6d5c75a1ef063b213e8d068",
                 "parameters": [
                     {
@@ -1606,20 +1429,16 @@
                         "description": "Product ID",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
                 "requestBody": {
-                    "description": "Product data per ProductRequest validation",
+                    "description": "Product data (all fields optional for PATCH)",
                     "required": true,
                     "content": {
-                        "multipart/form-data": {
+                        "application/json": {
                             "schema": {
-                                "required": [
-                                    "name",
-                                    "price"
-                                ],
                                 "properties": {
                                     "name": {
                                         "type": "string",
@@ -1630,11 +1449,42 @@
                                         "format": "float",
                                         "minimum": 0
                                     },
+                                    "compare_price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "nullable": true
+                                    },
                                     "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "details": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "colors": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "sizes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "currency": {
                                         "type": "string"
                                     },
+                                    "is_active": {
+                                        "type": "boolean"
+                                    },
                                     "category_id": {
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -1669,10 +1519,10 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Admin access required"
+                        "description": "Forbidden"
                     },
                     "404": {
-                        "description": "Product not found"
+                        "description": "Not found"
                     },
                     "422": {
                         "description": "Validation error"
@@ -1690,8 +1540,7 @@
                 "tags": [
                     "Products"
                 ],
-                "summary": "Get storefront product detail by slug",
-                "description": "Retrieve storefront product detail by slug",
+                "summary": "Get a single product by slug",
                 "operationId": "5ff1bd41e6c7e2bb37a8db906391a4df",
                 "parameters": [
                     {
@@ -1716,8 +1565,7 @@
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string",
-                                            "example": "Product retrieved successfully"
+                                            "type": "string"
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/Product"
@@ -1729,7 +1577,7 @@
                         }
                     },
                     "404": {
-                        "description": "Product not found"
+                        "description": "Not found"
                     }
                 }
             }
@@ -1739,26 +1587,37 @@
                 "tags": [
                     "Products"
                 ],
-                "summary": "Get soft deleted products",
-                "description": "Get soft deleted products with pagination (Admin only)",
+                "summary": "List soft-deleted products",
+                "description": "List soft-deleted products with pagination (Admin only)",
                 "operationId": "e038afe43fc15f1175feac875ff8ed9f",
                 "parameters": [
                     {
-                        "name": "page",
+                        "name": "search",
                         "in": "query",
-                        "description": "Page number",
+                        "description": "Search products by name",
+                        "required": false,
                         "schema": {
-                            "type": "integer",
-                            "default": 1
+                            "type": "string"
                         }
                     },
                     {
                         "name": "per_page",
                         "in": "query",
                         "description": "Items per page",
+                        "required": false,
                         "schema": {
                             "type": "integer",
-                            "default": 10
+                            "default": 15
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
                         }
                     }
                 ],
@@ -1781,6 +1640,9 @@
                                             "items": {
                                                 "$ref": "#/components/schemas/Product"
                                             }
+                                        },
+                                        "meta": {
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1792,7 +1654,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Admin access required"
+                        "description": "Forbidden"
                     }
                 },
                 "security": [
@@ -1807,8 +1669,8 @@
                 "tags": [
                     "Products"
                 ],
-                "summary": "Restore soft deleted product",
-                "description": "Restore a soft deleted product (Admin only)",
+                "summary": "Restore a soft-deleted product",
+                "description": "Restore a soft-deleted product (Admin only)",
                 "operationId": "2f1e3e63fd54f410d538be2fb7d6d4db",
                 "parameters": [
                     {
@@ -1817,7 +1679,7 @@
                         "description": "Product ID",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -1834,9 +1696,6 @@
                                         },
                                         "message": {
                                             "type": "string"
-                                        },
-                                        "data": {
-                                            "$ref": "#/components/schemas/Product"
                                         }
                                     },
                                     "type": "object"
@@ -1848,10 +1707,10 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Admin access required"
+                        "description": "Forbidden"
                     },
                     "404": {
-                        "description": "Product not found"
+                        "description": "Not found"
                     }
                 },
                 "security": [
@@ -1866,8 +1725,8 @@
                 "tags": [
                     "Products"
                 ],
-                "summary": "Permanently delete product",
-                "description": "Permanently delete a product (cannot be restored, Admin only)",
+                "summary": "Permanently delete a product",
+                "description": "Permanently delete a product (Admin only)",
                 "operationId": "327a0d5cc1eb0b0960d4988c4628c85a",
                 "parameters": [
                     {
@@ -1876,7 +1735,7 @@
                         "description": "Product ID",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -1904,10 +1763,10 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Admin access required"
+                        "description": "Forbidden"
                     },
                     "404": {
-                        "description": "Product not found"
+                        "description": "Not found"
                     }
                 },
                 "security": [
@@ -1923,10 +1782,10 @@
                     "Products"
                 ],
                 "summary": "Export products to file",
-                "description": "Export products to CSV or Excel format with optional filtering (Admin only, async job, returns 202 Accepted)",
+                "description": "Export products to CSV or Excel format (Admin only, async)",
                 "operationId": "b6a3046ece52a345b44bcc4326a687b6",
                 "requestBody": {
-                    "description": "Export parameters per ExportProductRequest validation",
+                    "description": "Export parameters",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -1936,29 +1795,29 @@
                                 ],
                                 "properties": {
                                     "format": {
-                                        "description": "Export file format",
                                         "type": "string",
                                         "enum": [
-                                            "csv",
-                                            "excel"
-                                        ]
+                                            "xlsx",
+                                            "csv"
+                                        ],
+                                        "example": "xlsx"
                                     },
                                     "search": {
-                                        "description": "Optional search term",
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "category_id": {
-                                        "description": "Optional category filter",
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "nullable": true
                                     },
                                     "status": {
-                                        "description": "Filter by status",
                                         "type": "string",
                                         "enum": [
                                             "active",
                                             "deleted",
                                             "all"
-                                        ]
+                                        ],
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -1978,16 +1837,9 @@
                                             "example": true
                                         },
                                         "message": {
-                                            "type": "string",
-                                            "example": "Export job queued. You will receive an email with the download link shortly."
+                                            "type": "string"
                                         },
                                         "data": {
-                                            "properties": {
-                                                "format": {
-                                                    "type": "string",
-                                                    "example": "excel"
-                                                }
-                                            },
                                             "type": "object"
                                         }
                                     },
@@ -2000,7 +1852,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Admin access required"
+                        "description": "Forbidden"
                     },
                     "422": {
                         "description": "Validation error"
@@ -2018,36 +1870,18 @@
                 "tags": [
                     "Products"
                 ],
-                "summary": "Download exported product file",
-                "description": "Download an exported product file (CSV or XLSX). Can be accessed via signed URL from email or with Bearer token.",
+                "summary": "Download a previously exported file",
+                "description": "Download a previously exported product file",
                 "operationId": "553eb9e24f8117f2a3c5e124b9244cdb",
                 "parameters": [
                     {
                         "name": "filename",
                         "in": "path",
-                        "description": "Filename of the export",
+                        "description": "Export filename",
                         "required": true,
                         "schema": {
                             "type": "string",
                             "example": "products_export_2026-03-03_09-41-08.xlsx"
-                        }
-                    },
-                    {
-                        "name": "signature",
-                        "in": "query",
-                        "description": "URL signature for verification (included in email link)",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "expires",
-                        "in": "query",
-                        "description": "Signature expiration timestamp",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
                         }
                     }
                 ],
@@ -2059,10 +1893,7 @@
                         }
                     },
                     "404": {
-                        "description": "File not found"
-                    },
-                    "401": {
-                        "description": "Invalid or expired signature (when using signed URL)"
+                        "description": "Not found"
                     }
                 }
             }
