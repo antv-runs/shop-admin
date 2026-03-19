@@ -20,4 +20,13 @@ class ReviewIndexRequest extends FormRequest
             'sort' => 'nullable|in:latest,oldest,highest_rating',
         ];
     }
+
+    protected function passedValidation(): void
+    {
+        if ($this->filled('rating')) {
+            $this->merge([
+                'rating' => (float) $this->input('rating'),
+            ]);
+        }
+    }
 }

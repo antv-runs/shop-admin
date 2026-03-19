@@ -14,8 +14,15 @@ class StoreReviewRequest extends FormRequest
     public function rules()
     {
         return [
-            'rating' => 'required|integer|min:1|max:5',
+            'rating' => 'required|numeric|min:1|max:5',
             'comment' => 'required|string|max:1000',
         ];
+    }
+
+    protected function passedValidation(): void
+    {
+        $this->merge([
+            'rating' => (float) $this->input('rating'),
+        ]);
     }
 }

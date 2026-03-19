@@ -21,4 +21,11 @@ class UpdateReviewRequest extends FormRequest
             'is_verified' => ['nullable', 'boolean'],
         ];
     }
+
+    protected function passedValidation(): void
+    {
+        $this->merge([
+            'rating' => (float) $this->input('rating'),
+        ]);
+    }
 }

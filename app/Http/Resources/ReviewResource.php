@@ -10,9 +10,10 @@ class ReviewResource extends JsonResource
     {
         return [
             'id' => (int) $this->id,
-            'rating' => (int) $this->rating,
             'comment' => $this->comment,
+            'isVerified' => (bool) $this->is_verified,
             'created_at' => optional($this->created_at)->format('Y-m-d'),
+            'rating' => (float) $this->rating,
             'user' => [
                 'name' => optional($this->user)->name ?? 'Guest',
             ],

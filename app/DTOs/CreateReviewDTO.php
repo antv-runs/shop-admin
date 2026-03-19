@@ -7,7 +7,7 @@ class CreateReviewDTO
     public function __construct(
         public readonly int $productId,
         public readonly ?int $userId,
-        public readonly int $rating,
+        public readonly float $rating,
         public readonly string $comment,
     ) {}
 
@@ -19,7 +19,7 @@ class CreateReviewDTO
         return new self(
             productId: (int) $data['product_id'],
             userId: isset($data['user_id']) ? (int) $data['user_id'] : null,
-            rating: (int) $data['rating'],
+            rating: (float) $data['rating'],
             comment: (string) $data['comment'],
         );
     }
