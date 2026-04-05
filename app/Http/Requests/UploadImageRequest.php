@@ -32,7 +32,7 @@ class UploadImageRequest extends FormRequest
         return [
             'id' => 'required|integer|exists:products,id',
             'images' => 'required|array|min:1|max:10',
-            'images.*' => 'file|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'images.*' => 'file|image|mimes:jpeg,png,jpg,webp|max:5120',
         ];
     }
 
@@ -47,7 +47,7 @@ class UploadImageRequest extends FormRequest
             'images.max' => 'You can upload a maximum of 10 images',
             'images.*.image' => 'Each file must be an image',
             'images.*.mimes' => 'Each image must be jpeg, png, jpg or webp',
-            'images.*.max' => 'Each image size must not exceed 2MB',
+            'images.*.max' => 'Each image size must not exceed 5MB',
         ];
     }
 }

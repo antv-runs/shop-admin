@@ -54,7 +54,7 @@ class ProfileController extends Controller
 
         $this->profileService->updateProfile($user, $dto);
 
-        return redirect()->route('admin.profile.show')->with('success', 'Profile updated successfully!');
+        return redirect()->route('admin.profile.edit')->with('success', 'Profile updated successfully!');
     }
 
     /**

@@ -59,7 +59,7 @@ class CategoryController extends Controller
 
         $this->categoryService->updateCategory($category, $dto);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully');
+        return redirect()->route('admin.categories.edit', $category->id)->with('success', 'Category updated successfully');
     }
 
     public function destroy($id)

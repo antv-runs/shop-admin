@@ -1651,7 +1651,7 @@
                     "Products"
                 ],
                 "summary": "Upload product images",
-                "description": "Upload product images (Admin only)",
+                "description": "Upload product images (Admin only). Maximum 5MB per image and 20MB total request size.",
                 "operationId": "b7730b90ea2ab130219528aa7018a283",
                 "requestBody": {
                     "required": true,
@@ -1668,6 +1668,7 @@
                                         "example": 1
                                     },
                                     "images[]": {
+                                        "description": "Up to 10 images; each image may be up to 5MB, with a 20MB total request limit.",
                                         "type": "array",
                                         "items": {
                                             "type": "string",

@@ -213,6 +213,8 @@
                     <input type="hidden" name="compare_price" value="{{ old('compare_price', $product->compare_price) }}">
                     <input type="hidden" name="description" value="{{ old('description', $product->description) }}">
                     <input type="hidden" name="details" value="{{ old('details', $product->details) }}">
+                    <input type="hidden" name="colors_input" value="{{ old('colors') ? implode(', ', old('colors')) : ($product->colors ? implode(', ', $product->colors) : '') }}">
+                    <input type="hidden" name="sizes_input" value="{{ old('sizes') ? implode(', ', old('sizes')) : ($product->sizes ? implode(', ', $product->sizes) : '') }}">
                     <input type="hidden" name="category_id" value="{{ old('category_id', $product->category_id) }}">
                     <input type="hidden" name="currency" value="{{ old('currency', $product->currency ?? 'USD') }}">
                     <input type="hidden" name="is_active" value="{{ old('is_active', $product->is_active ? 1 : 0) }}">

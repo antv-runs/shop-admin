@@ -86,12 +86,12 @@ class UserController extends Controller
                 return response()->json(['message' => 'User updated successfully', 'data' => $user]);
             }
 
-            return redirect()->route('admin.users.index')->with('success', 'User updated successfully');
+            return redirect()->route('admin.users.edit', $id)->with('success', 'User updated successfully');
         } catch (BusinessException $e) {
             if ($request->wantsJson()) {
                 return response()->json(['message' => $e->getMessage()], 403);
             }
-            return redirect()->route('admin.users.index')->with('error', $e->getMessage());
+            return redirect()->route('admin.users.edit', $id)->with('error', $e->getMessage());
         }
     }
 

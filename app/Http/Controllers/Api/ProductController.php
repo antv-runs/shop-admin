@@ -157,7 +157,7 @@ class ProductController extends BaseController
      * @OA\Post(
      *     path="/api/products/upload",
      *     summary="Upload product images",
-     *     description="Upload product images (Admin only)",
+        *     description="Upload product images (Admin only). Maximum 5MB per image and 20MB total request size.",
      *     tags={"Products"},
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
@@ -170,6 +170,7 @@ class ProductController extends BaseController
      *                 @OA\Property(
      *                     property="images[]",
      *                     type="array",
+        *                     description="Up to 10 images; each image may be up to 5MB, with a 20MB total request limit.",
      *                     @OA\Items(type="string", format="binary")
      *                 )
      *             )

@@ -104,7 +104,7 @@ class ProductController extends Controller
             ]));
         }
 
-        return redirect()->route('admin.products.index')
+        return redirect()->route('admin.products.edit', $product->id)
              ->with('success', 'Product updated successfully');
     }
 
