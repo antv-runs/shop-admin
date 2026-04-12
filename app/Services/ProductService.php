@@ -185,16 +185,26 @@ class ProductService implements ProductServiceInterface
         $hasPrimaryImage = $product->primaryImage !== null;
         $shouldSetFirstUploadedAsPrimary = !$hasPrimaryImage;
         $isFirstUploadedImage = true;
+        $uploadedPaths = [];
 
-        DB::transaction(function () use ($dto, $product, $shouldSetFirstUploadedAsPrimary, &$isFirstUploadedImage) {
-            foreach ($dto->images as $image) {
-                $path = $this->fileUploadService->uploadProductImage($image);
-                $isPrimary = $shouldSetFirstUploadedAsPrimary && $isFirstUploadedImage;
+        try {
+            DB::transaction(function () use ($dto, $product, $shouldSetFirstUploadedAsPrimary, &$isFirstUploadedImage, &$uploadedPaths) {
+                foreach ($dto->images as $image) {
+                    $path = $this->fileUploadService->uploadProductImage($image);
+                    $uploadedPaths[] = $path;
+                    $isPrimary = $shouldSetFirstUploadedAsPrimary && $isFirstUploadedImage;
 
-                $this->productRepository->createProductImage($product->id, $path, $isPrimary);
-                $isFirstUploadedImage = false;
+                    $this->productRepository->createProductImage($product->id, $path, $isPrimary);
+                    $isFirstUploadedImage = false;
+                }
+            });
+        } catch (\Throwable $exception) {
+            foreach ($uploadedPaths as $path) {
+                $this->fileUploadService->deleteFile($path);
             }
-        });
+
+            throw $exception;
+        }
 
         // Invalidate caches
         CacheHelper::forget(CacheKey::productDetail($dto->id));

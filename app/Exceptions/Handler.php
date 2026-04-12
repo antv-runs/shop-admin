@@ -63,7 +63,7 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $e)
     {
         if ($e instanceof PostTooLargeException) {
-            $message = 'The uploaded file is too large. Maximum allowed image size is 2MB.';
+            $message = 'Upload payload is too large. Maximum total request size is 20MB, with up to 10 images and 5MB per image.';
 
             if ($request->expectsJson() || $request->is('api/*')) {
                 return $this->error(

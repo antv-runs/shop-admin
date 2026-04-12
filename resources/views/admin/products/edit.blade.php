@@ -223,6 +223,7 @@
                         <label class="block font-medium">Upload Additional Images:</label>
                         <div id="preview-list" class="mb-2 flex flex-wrap gap-2"></div>
                         <input type="file" name="images[]" id="images" accept="image/*" multiple class="mt-1 block w-full">
+                        <p class="text-xs text-gray-400 mt-1">Maximum 10 images per upload.</p>
                         @error('images') <div class="text-danger text-red-600">{{ $message }}</div> @enderror
                         @foreach ($errors->get('images.*') as $messages)
                             @foreach ($messages as $message)
@@ -240,10 +241,17 @@
     <script>
         document.getElementById('images').addEventListener('change', function(event) {
             const previewList = document.getElementById('preview-list');
+            const maxImages = 10;
 
             previewList.innerHTML = '';
 
             const files = Array.from(event.target.files || []);
+
+            if (files.length > maxImages) {
+                window.alert(`You can upload a maximum of ${maxImages} images at once.`);
+                event.target.value = '';
+                return;
+            }
 
             if (!files.length) {
                 return;

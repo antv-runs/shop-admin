@@ -52,7 +52,7 @@ class ProductRequest extends FormRequest
                 'currency' => 'required|string|size:3',
                 'is_active' => 'nullable|boolean',
                 'category_id' => 'nullable|exists:categories,id',
-                'images' => 'nullable|array',
+                'images' => 'nullable|array|max:10',
                 'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
             ];
         }
@@ -71,7 +71,7 @@ class ProductRequest extends FormRequest
             'currency' => 'required|string|size:3',
             'is_active' => 'nullable|boolean',
             'category_id' => 'nullable|exists:categories,id',
-            'images' => 'nullable|array',
+            'images' => 'nullable|array|max:10',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
         ];
     }
@@ -85,6 +85,7 @@ class ProductRequest extends FormRequest
             'sizes.array' => 'Sizes must be provided as a list.',
             'sizes.*.string' => 'Each size must be a valid text value.',
             'images.array' => 'Images must be uploaded as an array.',
+            'images.max' => 'You can upload a maximum of 10 images at once.',
             'images.*.image' => 'Each selected file must be a valid image.',
             'images.*.mimes' => 'Each image must be a file of type: jpeg, png, jpg, webp.',
             'images.*.max' => 'Each image may not be greater than 5MB.',
