@@ -74,15 +74,10 @@ class ProductService implements ProductServiceInterface
 
     /**
      * Get product by ID
-     * Cached with TTL of 300 seconds
      */
     public function getProduct($id)
     {
-        $cacheKey = CacheKey::productDetail($id);
-
-        return CacheHelper::remember($cacheKey, CacheConstants::CACHE_TTL, function () use ($id) {
-            return $this->productRepository->findById($id);
-        });
+        return $this->productRepository->findById($id);
     }
 
     /**
@@ -92,8 +87,6 @@ class ProductService implements ProductServiceInterface
     {
         $result = $this->productRepository->update($product, $this->buildProductData($dto));
 
-        // Invalidate caches
-        CacheHelper::forget(CacheKey::productDetail($product->id));
         $this->invalidateProductListCache();
 
         return $result;
@@ -106,8 +99,6 @@ class ProductService implements ProductServiceInterface
     {
         $result = $this->productRepository->delete($id);
 
-        // Invalidate caches
-        CacheHelper::forget(CacheKey::productDetail($id));
         $this->invalidateProductListCache();
 
         return $result;
@@ -141,8 +132,6 @@ class ProductService implements ProductServiceInterface
     {
         $this->productRepository->forceDelete($id);
 
-        // Invalidate caches
-        CacheHelper::forget(CacheKey::productDetail($id));
         $this->invalidateProductListCache();
     }
 
@@ -206,8 +195,6 @@ class ProductService implements ProductServiceInterface
             throw $exception;
         }
 
-        // Invalidate caches
-        CacheHelper::forget(CacheKey::productDetail($dto->id));
         $this->invalidateProductListCache();
 
         return $product->fresh()->load('images');
@@ -220,7 +207,6 @@ class ProductService implements ProductServiceInterface
     {
         $this->productRepository->setPrimaryProductImage($productId, $imageId);
 
-        CacheHelper::forget(CacheKey::productDetail($productId));
         $this->invalidateProductListCache();
     }
 
@@ -231,7 +217,6 @@ class ProductService implements ProductServiceInterface
     {
         $this->productRepository->moveProductImageLeft($productId, $imageId);
 
-        CacheHelper::forget(CacheKey::productDetail($productId));
         $this->invalidateProductListCache();
     }
 
@@ -242,7 +227,6 @@ class ProductService implements ProductServiceInterface
     {
         $this->productRepository->moveProductImageRight($productId, $imageId);
 
-        CacheHelper::forget(CacheKey::productDetail($productId));
         $this->invalidateProductListCache();
     }
 
@@ -253,7 +237,6 @@ class ProductService implements ProductServiceInterface
     {
         $this->productRepository->deleteProductImage($productId, $imageId);
 
-        CacheHelper::forget(CacheKey::productDetail($productId));
         $this->invalidateProductListCache();
     }
 
