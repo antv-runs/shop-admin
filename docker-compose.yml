@@ -2,17 +2,23 @@ version: '3.8'
 
 services:
   app:
-    image: antvrunss/shop-admin-api:latest
+    build:
+      context: .
+      target: dev
+    image: shop-admin-api:dev
+    command: php-fpm
     container_name: shop-admin-api-prod
     restart: unless-stopped
     working_dir: /var/www
-    env_file:
-      - .env
+    volumes:
+      - ./:/var/www
     depends_on:
       - mysql
       - redis
     networks:
       - shop-admin-api-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   nginx:
     image: nginx:alpine
@@ -57,29 +63,42 @@ services:
       - shop-admin-api-network
 
   queue:
-    image: antvrunss/shop-admin-api:latest
+    image: shop-admin-api:dev
     container_name: shop-admin-queue-prod
     restart: unless-stopped
     working_dir: /var/www
-    env_file:
-      - .env
+    volumes:
+      - ./:/var/www
     command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
     depends_on:
+      - app
       - redis
       - mysql
     networks:
       - shop-admin-api-network
 
   scheduler:
-    image: antvrunss/shop-admin-api:latest
+    image: shop-admin-api:dev
     container_name: shop-admin-scheduler-prod
     restart: unless-stopped
     working_dir: /var/www
-    env_file:
-      - .env
+    volumes:
+      - ./:/var/www
     command: php artisan schedule:work
     depends_on:
       - app
+    networks:
+      - shop-admin-api-network
+
+  node:
+    image: node:20-alpine
+    container_name: shop-admin-node-prod
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    command: tail -f /dev/null
+    ports:
+      - "5173:5173"
     networks:
       - shop-admin-api-network
 
