@@ -1,0 +1,11 @@
+services:
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: shop-admin-phpmyadmin
+    ports:
+      - "8889:80"
+    environment:
+      PMA_HOST: host.docker.internal
+      PMA_PORT: 3306
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
